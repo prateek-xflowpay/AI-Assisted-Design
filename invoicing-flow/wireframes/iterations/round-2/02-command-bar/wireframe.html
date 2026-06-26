@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R2 · 02 Command Bar — Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; }
+  .topnav { height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+  .shell-body { display: flex; height: calc(100vh - 48px); position: relative; }
+  .sidebar { width: 220px; background: #343A40; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; }
+  .sidebar-item { height: 38px; display: flex; align-items: center; padding: 0 20px; color: #ADB5BD; font-size: 13px; gap: 10px; }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 15px; height: 15px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+  .main { flex: 1; background: #F8F9FA; opacity: 0.2; }
+  .overlay { position: absolute; top: 0; left: 220px; right: 0; bottom: 0; background: #F8F9FA; display: flex; flex-direction: column; z-index: 10; }
+  .overlay-header { height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0; }
+  .overlay-title { font-size: 16px; font-weight: 600; color: #212529; }
+  .overlay-sub { font-size: 13px; color: #ADB5BD; }
+  .overlay-close { margin-left: auto; width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+  .overlay-body { flex: 1; display: flex; overflow: hidden; }
+  .work { flex: 1; overflow-y: auto; padding: 28px 28px; }
+  .work-col { max-width: 680px; margin: 0 auto; }
+  .annotation-bar { background: #495057; color: #fff; font-size: 11px; padding: 8px 14px; line-height: 1.5; border-radius: 4px; margin-bottom: 20px; }
+  /* Command bar */
+  .cmd-wrap { background:#fff; border: 1.5px solid #495057; border-radius: 10px; box-shadow: rgba(68,78,94,0.10) 0px 2px 10px; padding: 16px 18px; }
+  .cmd-label { font-size: 11px; font-weight: 600; color:#6C757D; text-transform:uppercase; letter-spacing:0.05em; margin-bottom: 8px; }
+  .cmd-input { font-size: 15px; color:#212529; line-height: 1.6; }
+  .cmd-input .hl { background:#E9ECEF; border-radius: 3px; padding: 1px 5px; color:#343A40; font-weight:500; }
+  .cmd-row { display:flex; align-items:center; gap:10px; margin-top: 14px; }
+  .cmd-hint { font-size: 11px; color:#ADB5BD; }
+  .cmd-go { margin-left:auto; height: 34px; background:#495057; color:#fff; border:none; border-radius:6px; padding: 0 18px; font-size:13px; cursor:pointer; font-family:inherit;}
+  .examples { display:flex; flex-wrap:wrap; gap:6px; margin-top: 10px;}
+  .example-chip { font-size:11px; background:#F1F3F5; border:1px solid #E9ECEF; color:#6C757D; border-radius:12px; padding:4px 10px; cursor:pointer; }
+  /* Parsed result */
+  .parsed-label { font-size: 11px; color:#6C757D; margin: 22px 0 10px; display:flex; align-items:center; gap:8px;}
+  .parsed-label .dot { width:6px;height:6px;border-radius:50%;background:#6C757D;}
+  .parsed-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .parsed-card { background:#fff; border:1px solid #DEE2E6; border-radius:8px; padding: 12px 14px; }
+  .parsed-card.full { grid-column: span 2; }
+  .pc-lbl { font-size: 10px; color:#ADB5BD; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; display:flex; align-items:center; gap:6px;}
+  .pc-val { font-size: 14px; color:#212529; font-weight:500; }
+  .pc-edit { margin-left:auto; font-size:11px; color:#ADB5BD; text-decoration:underline; cursor:pointer; }
+  .pc-badge { font-size:9px; font-weight:600; background:#E9ECEF; color:#6C757D; border-radius:3px; padding:1px 5px; text-transform:uppercase;}
+  .pc-confirm { font-size:9px; font-weight:600; background:#DEE2E6; color:#495057; border-radius:3px; padding:1px 5px; text-transform:uppercase;}
+  .mini-table { width:100%; border-collapse:collapse; margin-top:4px;}
+  .mini-table td { font-size:12px; padding:4px 4px; color:#495057; border-bottom:1px solid #F1F3F5;}
+  /* Preview */
+  .preview-panel { width: 380px; background: #E9ECEF; border-left: 1px solid #DEE2E6; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+  .preview-header { height: 44px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 16px; gap: 10px; }
+  .preview-header-title { font-size: 12px; font-weight: 600; color: #495057; }
+  .preview-action-btn { height: 28px; border: 1px solid #ADB5BD; border-radius: 4px; background: #fff; color: #6C757D; font-size: 11px; padding: 0 10px; cursor: pointer; margin-left: auto; }
+  .preview-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; justify-content: center; }
+  .invoice-doc { width: 100%; background: #fff; border-radius: 4px; box-shadow: rgba(68,78,94,0.15) 0px 2px 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-height: 460px; }
+  .doc-line { height: 9px; background: #E9ECEF; border-radius: 2px; }
+  .doc-divider { height: 1px; background: #E9ECEF; }
+  .doc-meta-lbl { font-size: 10px; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.05em; }
+  .doc-meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .doc-items-hatch { height: 90px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px); border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #ADB5BD; }
+  .doc-total-row { display: flex; justify-content: flex-end; gap: 24px; font-size: 12px; color: #6C757D; }
+  .doc-total-row.grand { font-weight: 600; color: #212529; font-size: 13px; }
+  .overlay-footer { height: 60px; background: #fff; border-top: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+  .btn-primary { height: 38px; background: #495057; color: #fff; border: none; border-radius: 6px; padding: 0 22px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-ghost { height: 38px; background: transparent; color: #ADB5BD; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .footer-note { font-size: 12px; color: #ADB5BD; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="topnav"><div class="topnav-logo"></div><div class="topnav-spacer"></div><div class="topnav-badge"></div><div class="topnav-avatar"></div></div>
+<div class="shell-body">
+  <div class="sidebar">
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+    <div class="sidebar-section">Receive Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+    <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+    <div class="sidebar-section">Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+  </div>
+  <div class="main"></div>
+
+  <div class="overlay">
+    <div class="overlay-header">
+      <div class="overlay-title">Create Invoice</div>
+      <div class="overlay-sub">Describe it — we'll structure the rest</div>
+      <div class="overlay-close">×</div>
+    </div>
+
+    <div class="overlay-body">
+      <div class="work">
+        <div class="work-col">
+          <div class="annotation-bar">
+            <strong>Model B — Command-bar / conversational:</strong> The user types the invoice as one sentence. The system parses it into editable structured fields (partner, items, dates, amount) and auto-suggests compliance values. The form becomes a <em>confirmation</em> surface, not a data-entry one. Steps collapse to: type → review parsed fields → activate.
+          </div>
+
+          <!-- Command bar -->
+          <div class="cmd-wrap">
+            <div class="cmd-label">New invoice</div>
+            <div class="cmd-input">Invoice <span class="hl">Acme Corp</span> <span class="hl">$5,000</span> for <span class="hl">Software Development</span>, due <span class="hl">Aug 7</span><span style="color:#ADB5BD;">|</span></div>
+            <div class="cmd-row">
+              <div class="cmd-hint">Type naturally — partner, amount, item, due date in any order</div>
+              <button class="cmd-go">Parse →</button>
+            </div>
+          </div>
+          <div class="examples">
+            <span class="example-chip">"Acme $5k for consulting net-30"</span>
+            <span class="example-chip">"Bill Globex 3 × design @ 800 USD"</span>
+            <span class="example-chip">Start from blank form instead</span>
+          </div>
+
+          <!-- Parsed -->
+          <div class="parsed-label"><span class="dot"></span> Parsed into invoice — review &amp; confirm the highlighted fields</div>
+          <div class="parsed-grid">
+            <div class="parsed-card">
+              <div class="pc-lbl">Partner <span class="pc-confirm">confirm</span><span class="pc-edit">edit</span></div>
+              <div class="pc-val">Acme Corp · USD</div>
+            </div>
+            <div class="parsed-card">
+              <div class="pc-lbl">Due date <span class="pc-confirm">confirm</span><span class="pc-edit">edit</span></div>
+              <div class="pc-val">7 Aug 2026</div>
+            </div>
+            <div class="parsed-card full">
+              <div class="pc-lbl">Items <span class="pc-edit">edit</span></div>
+              <table class="mini-table">
+                <tr><td style="width:60%;">Software Development</td><td style="text-align:center;">1</td><td style="text-align:right;">5,000.00</td><td style="text-align:right;font-weight:600;">USD 5,000.00</td></tr>
+              </table>
+            </div>
+            <div class="parsed-card">
+              <div class="pc-lbl">Purpose code <span class="pc-badge">auto</span><span class="pc-edit">edit</span></div>
+              <div class="pc-val">P1006 · Software exports</div>
+            </div>
+            <div class="parsed-card">
+              <div class="pc-lbl">Transaction type <span class="pc-badge">auto</span><span class="pc-edit">edit</span></div>
+              <div class="pc-val">Services</div>
+            </div>
+            <div class="parsed-card full">
+              <div class="pc-lbl">Payment methods <span class="pc-badge">default</span><span class="pc-edit">edit</span></div>
+              <div class="pc-val" style="font-size:13px;color:#495057;">Bank transfer (VBAN) · Payment link on</div>
+            </div>
+          </div>
+          <div style="height:8px;"></div>
+        </div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="preview-header"><div class="preview-header-title">Invoice Preview</div><button class="preview-action-btn">Change Template</button></div>
+        <div class="preview-body">
+          <div class="invoice-doc">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="width:64px; height:22px; background:#E9ECEF; border-radius:3px; display:flex;align-items:center;justify-content:center;font-size:10px;color:#ADB5BD;">LOGO</div>
+              <div style="text-align:right;"><div style="font-size:15px;font-weight:700;color:#ADB5BD;letter-spacing:0.04em;">INVOICE</div><div style="font-size:10px;color:#ADB5BD;margin-top:2px;">INV-ACM-00043</div></div>
+            </div>
+            <div class="doc-divider"></div>
+            <div class="doc-meta-row">
+              <div><div class="doc-meta-lbl">From</div><div class="doc-line" style="width:80%;margin-top:4px;"></div><div class="doc-line" style="width:55%;margin-top:3px;"></div></div>
+              <div style="text-align:right;"><div class="doc-meta-lbl">Bill To</div><div style="font-size:12px;font-weight:500;color:#495057;margin-top:4px;">Acme Corp</div></div>
+            </div>
+            <div class="doc-meta-row" style="grid-template-columns:repeat(2,1fr);"><div><div class="doc-meta-lbl">Due</div><div class="doc-line" style="width:60%;margin-top:4px;"></div></div><div style="text-align:right;"><div class="doc-meta-lbl">Amount Due</div><div class="doc-line" style="width:80%;height:13px;background:#DEE2E6;margin-top:4px;margin-left:auto;"></div></div></div>
+            <div class="doc-items-hatch">Software Development · 5,000.00</div>
+            <div class="doc-total-row"><span>Subtotal</span><span>USD 5,000.00</span></div>
+            <div class="doc-total-row grand"><span>Total Due</span><span>USD 5,000.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay-footer">
+      <button class="btn-ghost">Save as Draft</button>
+      <div class="footer-note">2 auto-filled fields to confirm before activating</div>
+      <button class="btn-primary">Review &amp; Activate →</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

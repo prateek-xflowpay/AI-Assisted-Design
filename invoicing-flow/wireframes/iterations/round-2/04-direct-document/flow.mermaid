@@ -1,0 +1,20 @@
+flowchart TD
+    A[Invoices list] -->|"+ New invoice"| B[Blank invoice document opens<br/>regions show edit affordance]
+    B --> C[Click 'Bill To' region]
+    C --> D[Inline popover: choose partner + currency]
+    D -->|Apply| E[Partner region filled, checklist updates]
+    E --> F[Click 'Line items' region]
+    F --> G[Inline editing: add item rows]
+    G --> H{Dates / branding default ok?}
+    H -->|Yes| J[Footer checklist: required regions done]
+    H -->|No| I[Click Dates / Branding region -> popover edit]
+    I --> J
+    J --> K[Click 'Payment & compliance' region]
+    K --> L[Popover: methods + auto compliance to confirm]
+    L --> M{All checklist items green?}
+    M -->|No| N[Footer highlights missing region]
+    N --> C
+    M -->|Yes| O[Activate enabled]
+    O -->|Activate| P{Partner verified?}
+    P -->|Yes| Q[Activated -> detail + success]
+    P -->|No / hold| R[Saved as Draft notice]

@@ -1,0 +1,20 @@
+flowchart TD
+    A[Invoices list] -->|"+ New invoice"| B[Command bar focused<br/>'Describe this invoice']
+    B --> C{User input mode}
+    C -->|Types a sentence| D[Parse]
+    C -->|"Start from blank form"| Z[Fallback: Model A single form]
+    D --> E[Fields extracted:<br/>partner, items, amount, due]
+    E --> F{Partner recognised?}
+    F -->|Yes| G[Partner matched + currency set]
+    F -->|No / ambiguous| H[Disambiguation chip:<br/>pick partner or add new]
+    H --> G
+    G --> I[Compliance auto-suggested<br/>purpose code + txn type]
+    I --> J[Review screen:<br/>auto fields flagged 'confirm']
+    J --> K{All confirm-flags cleared?}
+    K -->|No| L[Edit flagged field inline]
+    L --> J
+    K -->|Yes| M[Activate enabled]
+    M -->|Activate| N{Partner verified?}
+    N -->|Yes| O[Activated -> detail + success]
+    N -->|No / hold| P[Saved as Draft notice]
+    D -.Low parse confidence.-> Q[Show raw text + map fields manually]

@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xflow AI-Assisted Design — Output Gallery</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #0f1e36;
+  --navy-mid: #1a2f50;
+  --blue: #3e8bfe;
+  --blue-light: #e8f1ff;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --red: #b91c1c;
+  --red-light: #fee2e2;
+  --purple: #7c3aed;
+  --purple-light: #ede9fe;
+  --gray: #6b7280;
+  --gray-light: #f3f4f6;
+  --border: #e5e7eb;
+  --bar-h: 52px;
+  --drawer-h: 48vh;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #0a1220;
+  color: #fff;
+  height: 100vh;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+/* ── TOP BAR ── */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--bar-h);
+  background: var(--navy);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 400;
+}
+
+.bar-brand {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+.bar-logo {
+  width: 26px; height: 26px;
+  background: var(--blue);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.bar-brand-name {
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+.bar-divider {
+  width: 1px; height: 20px;
+  background: rgba(255,255,255,.12);
+  flex-shrink: 0;
+}
+
+.bar-context {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+}
+.bar-project {
+  font-size: 12px;
+  color: rgba(255,255,255,.4);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bar-chevron { color: rgba(255,255,255,.2); font-size: 10px; flex-shrink: 0; }
+.bar-round {
+  font-size: 12px;
+  color: rgba(255,255,255,.4);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bar-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.badge-primary   { background: var(--green-light); color: var(--green); }
+.badge-fallback  { background: #d1fae5; color: #065f46; }
+.badge-parked    { background: var(--amber-light); color: var(--amber); }
+.badge-superseded{ background: var(--red-light); color: var(--red); }
+.badge-review    { background: var(--blue-light); color: var(--blue); }
+.badge-candidate { background: var(--blue-light); color: var(--blue); }
+.badge-prototype { background: var(--purple-light); color: var(--purple); }
+
+.bar-right {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.bar-counter {
+  font-size: 12px;
+  color: rgba(255,255,255,.35);
+  white-space: nowrap;
+}
+.nav-btn {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 7px;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+  user-select: none;
+}
+.nav-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+.nav-btn:disabled { opacity: .25; cursor: default; }
+.key-hint {
+  font-size: 10px; color: rgba(255,255,255,.2);
+  white-space: nowrap; display: none;
+}
+@media (min-width: 900px) { .key-hint { display: block; } }
+
+/* ── MAIN STAGE ── */
+#stage {
+  position: fixed;
+  top: var(--bar-h);
+  left: 0; right: 0;
+  bottom: 0;
+  transition: bottom .3s cubic-bezier(.4,0,.2,1);
+}
+#stage.drawer-open {
+  bottom: var(--drawer-h);
+}
+
+/* wireframe iframe */
+#wf-iframe {
+  width: 100%; height: 100%;
+  border: none;
+  display: block;
+  background: #fff;
+}
+
+/* separator / round-break slides */
+#sep-slide {
+  display: none;
+  width: 100%; height: 100%;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 0;
+  background: var(--navy);
+}
+#sep-slide.visible { display: flex; }
+
+.sep-eyebrow {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 16px;
+}
+.sep-icon { font-size: 56px; margin-bottom: 20px; }
+.sep-title {
+  font-size: 36px; font-weight: 800;
+  letter-spacing: -1px; color: #fff;
+  text-align: center;
+  margin-bottom: 12px;
+  max-width: 680px;
+}
+.sep-desc {
+  font-size: 16px; color: rgba(255,255,255,.5);
+  text-align: center; line-height: 1.6;
+  max-width: 560px;
+  margin-bottom: 32px;
+}
+.sep-stats {
+  display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+}
+.sep-stat {
+  text-align: center;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: 16px 24px;
+}
+.sep-stat-num {
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -1px; color: #fff;
+}
+.sep-stat-label {
+  font-size: 11px; color: rgba(255,255,255,.4);
+  margin-top: 2px;
+}
+.sep-continue {
+  margin-top: 40px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: rgba(255,255,255,.3);
+}
+.sep-continue kbd {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+}
+
+/* round break slide */
+.round-break-slide {
+  display: none;
+  width: 100%; height: 100%;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 0;
+  background: #0d1a2e;
+}
+.round-break-slide.visible { display: flex; }
+.rb-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 14px;
+}
+.rb-title {
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -.5px; color: #fff;
+  text-align: center; margin-bottom: 10px;
+}
+.rb-desc {
+  font-size: 15px; color: rgba(255,255,255,.5);
+  text-align: center; line-height: 1.6;
+  max-width: 480px;
+}
+.rb-badges { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+.rb-badge {
+  font-size: 12px; font-weight: 500;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* ── DETAILS DRAWER ── */
+#drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--drawer-h);
+  background: #fff;
+  color: #111827;
+  z-index: 300;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -4px 32px rgba(0,0,0,.3);
+}
+#drawer.open {
+  transform: translateY(0);
+}
+
+.drawer-handle {
+  width: 40px; height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.drawer-header {
+  padding: 10px 24px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.drawer-title { font-size: 15px; font-weight: 700; flex: 1; }
+.drawer-close {
+  width: 28px; height: 28px;
+  background: var(--gray-light);
+  border: none; border-radius: 6px;
+  cursor: pointer; font-size: 14px;
+  color: var(--gray);
+  display: flex; align-items: center; justify-content: center;
+}
+.drawer-close:hover { background: var(--border); }
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-content: start;
+}
+@media (max-width: 700px) {
+  .drawer-body { grid-template-columns: 1fr; }
+}
+
+.d-section { display: flex; flex-direction: column; gap: 6px; }
+.d-section.full { grid-column: 1 / -1; }
+.d-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--gray);
+}
+.d-text { font-size: 13px; line-height: 1.6; color: #111827; }
+.d-model { font-size: 13px; font-weight: 600; color: var(--navy); }
+.d-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.d-list li {
+  font-size: 13px; line-height: 1.4; color: #111827;
+  display: flex; gap: 6px;
+}
+.d-list li::before { content: "·"; color: var(--gray); flex-shrink: 0; }
+.d-pro::before  { content: "✓"; color: var(--green)  !important; font-weight: 700; }
+.d-con::before  { content: "✗"; color: var(--red)    !important; font-weight: 700; }
+.d-best {
+  font-size: 13px; background: var(--blue-light);
+  color: #1e3a5f; border-radius: 7px;
+  padding: 10px 13px; line-height: 1.5;
+}
+.d-revival {
+  font-size: 13px; background: var(--amber-light);
+  color: #78350f; border-radius: 7px;
+  padding: 10px 13px; line-height: 1.5;
+}
+.d-note {
+  font-size: 13px; background: var(--red-light);
+  color: var(--red); border-radius: 7px;
+  padding: 10px 13px; line-height: 1.5;
+}
+
+/* ── DETAILS BUTTON ── */
+#details-btn {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  z-index: 500;
+  background: var(--navy);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 24px;
+  padding: 10px 18px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  transition: all .15s;
+  font-family: inherit;
+}
+#details-btn:hover { background: var(--navy-mid); }
+#details-btn.hidden { display: none; }
+
+/* ── PROGRESS BAR ── */
+#progress {
+  position: fixed;
+  top: var(--bar-h); left: 0;
+  height: 2px;
+  background: var(--blue);
+  z-index: 399;
+  transition: width .2s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="bar-brand">
+    <div class="bar-logo">X</div>
+    <span class="bar-brand-name">AI-Assisted Design</span>
+  </div>
+  <div class="bar-divider"></div>
+  <div class="bar-context">
+    <span class="bar-project" id="bar-project"></span>
+    <span class="bar-chevron" id="bar-chev1">›</span>
+    <span class="bar-round" id="bar-round"></span>
+    <span class="bar-chevron" id="bar-chev2">›</span>
+    <span class="bar-name" id="bar-name"></span>
+    <span id="bar-badge"></span>
+  </div>
+  <div class="bar-right">
+    <span class="key-hint">← → keys to navigate</span>
+    <span class="bar-counter" id="bar-counter">1 of 20</span>
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)">←</button>
+    <button class="nav-btn" id="btn-next" onclick="go(1)">→</button>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="progress"></div>
+
+<!-- MAIN STAGE -->
+<div id="stage">
+
+  <!-- Wireframe iframe -->
+  <iframe id="wf-iframe" src="" title="Wireframe"></iframe>
+
+  <!-- Project separator slide -->
+  <div id="sep-slide">
+    <div class="sep-eyebrow" id="sep-eyebrow"></div>
+    <div class="sep-icon" id="sep-icon"></div>
+    <div class="sep-title" id="sep-title"></div>
+    <div class="sep-desc" id="sep-desc"></div>
+    <div class="sep-stats" id="sep-stats"></div>
+    <div class="sep-continue">Press <kbd>→</kbd> to begin</div>
+  </div>
+
+  <!-- Round break slide -->
+  <div class="round-break-slide" id="rb-slide">
+    <div class="rb-label" id="rb-label"></div>
+    <div class="rb-title" id="rb-title"></div>
+    <div class="rb-desc" id="rb-desc"></div>
+    <div class="rb-badges" id="rb-badges"></div>
+    <div class="sep-continue" style="margin-top:28px;">Press <kbd>→</kbd> to continue</div>
+  </div>
+
+</div>
+
+<!-- DRAWER -->
+<div id="drawer">
+  <div class="drawer-handle" onclick="closeDrawer()"></div>
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawer-title">Iteration details</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</div>
+
+<!-- DETAILS BUTTON -->
+<button id="details-btn" onclick="toggleDrawer()">Details ↑</button>
+
+
+<script>
+// ── SLIDE DATA ────────────────────────────────────────────────────────────────
+
+const SLIDES = [
+
+  // ── PROJECT SEPARATOR: INVOICING FLOW ──────────────────────────────────────
+  {
+    type: 'separator',
+    project: 'Invoicing Flow Redesign',
+    icon: '🔄',
+    eyebrow: 'Project 1 of 3',
+    title: 'Invoicing Flow Redesign',
+    desc: 'Full redesign of the create-invoice flow. Driver: too many steps causing drop-off in the existing 4-step wizard. Two rounds of lo-fi exploration — 8 distinct mental models — UX copy, and an interactive prototype.',
+    stats: [
+      { num: '8', label: 'Wireframe models' },
+      { num: '2', label: 'Rounds' },
+      { num: '2', label: 'Prototypes' },
+      { num: 'Command Bar', label: 'Lead model selected' },
+    ],
+  },
+
+  // ── INVOICING FLOW — ROUND 1 (was Round 2: fewer-steps restart) ────────────
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 1 · 01',
+    name: 'Smart Single-Screen Form',
+    status: 'fallback',
+    src: 'invoicing-flow/wireframes/iterations/round-2/01-smart-single-form/wireframe.html',
+    details: {
+      model: 'Form-first, one page instead of four steps',
+      hypothesis: 'Most drop-off comes from the 4-step wizard making a short task feel long, and from compliance fields appearing as required work when they could be defaulted. Collapsing to one page with sensible defaults gets a typical invoice to "Activate" in one scroll — no Next/Back, no locked steps.',
+      pros: ['Fewest possible navigation actions; Activate always in view', 'Smart defaults remove the perceived burden of compliance fields', 'Easy to scan the whole invoice state at once', 'Closest to the current building blocks — lowest build risk'],
+      cons: ['A long page can feel heavy on first sight if defaults aren\'t trusted', 'Risk of users missing the collapsed "More details" when they need to change a purpose code', 'Validation must be inline and non-blocking — more design work than step gates'],
+      best: 'The common case: a direct user creating a familiar invoice for a known partner who wants to be done quickly.',
+      revival: null,
+      note: 'Selected as the fallback for Model B (Command Bar). When parse confidence is low or a partner is not matched, this form is the graceful degradation path.',
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 1 · 02',
+    name: 'Command Bar / Conversational',
+    status: 'primary',
+    src: 'invoicing-flow/wireframes/iterations/round-2/02-command-bar/wireframe.html',
+    details: {
+      model: 'Language-first',
+      hypothesis: 'For experienced users who know exactly what they want, the fastest path is to say it once. The system parses the invoice from one typed line, auto-suggests compliance values, and flips the UI\'s job from collecting data to confirming it. Type → glance → activate.',
+      pros: ['Potentially the lowest time-to-activate for repeat/expert users', 'Naturally accommodates partial input — fills what it can, asks only for the rest', 'Compliance framed as "confirm this" rather than "go find this"', 'Differentiated, memorable; pairs well with the blank-form fallback'],
+      cons: ['Parsing reliability is a real risk; bad parses erode trust fast', 'New users may not know what to type — needs strong examples/scaffolding', 'Editing structured items by re-typing is awkward; still needs a fallback form', 'Higher build + model cost than other approaches'],
+      best: 'High-volume direct users issuing similar invoices repeatedly. Always degrades gracefully to Model A (single form).',
+      revival: null,
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 1 · 03',
+    name: 'Duplicate-First / Template Gallery',
+    status: 'parked',
+    src: 'invoicing-flow/wireframes/iterations/round-2/03-duplicate-first/wireframe.html',
+    details: {
+      model: 'Reuse-first',
+      hypothesis: 'A large share of invoices closely resemble a previous one to the same partner. Starting from "last time" instead of blank shrinks the user\'s job to a couple of edits — fewer real steps than re-deriving every field, and compliance values carry over correctly.',
+      pros: ['Eliminates most data entry for recurring/repeat invoices', 'Compliance fields carry over correctly — fewer chances to get them wrong', '"Kept vs updated" labelling builds trust and makes the diff scannable', 'Encourages saved templates, compounding the speed-up over time'],
+      cons: ['Weak for genuinely new partners — must fall back to blank form', 'Risk of stale values carrying over silently (old due terms, wrong amount)', 'Adds a chooser step before editing — net win only when a good source exists'],
+      best: 'Established direct users with recurring partners and repeat billing.',
+      revival: 'Recurring-billing speed becomes the primary design priority.',
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 1 · 04',
+    name: 'Direct-on-Document Editing',
+    status: 'parked',
+    src: 'invoicing-flow/wireframes/iterations/round-2/04-direct-document/wireframe.html',
+    details: {
+      model: 'Direct manipulation / spatial',
+      hypothesis: 'The current flow forces users to mentally map form fields to where they land on the invoice. If they edit the invoice directly, the mapping disappears, live preview becomes redundant, and "steps" dissolve into "click the thing you want to change." WYSIWYG reduces both step count and cognitive translation.',
+      pros: ['Zero steps; what you see is exactly what the partner gets', 'Removes the form↔preview translation entirely; reclaims the split-screen space', 'Naturally surfaces branding/template as part of the same surface', 'Strong fit for visual / detail-oriented users'],
+      cons: ['Compliance fields have no natural place on the document — risk of being buried in a footer popover', 'Discoverability: users must learn that regions are clickable', 'Harder to enforce required-field validation than an explicit form', 'Higher build complexity (region hit-targets, popovers, responsive document)'],
+      best: 'Users who think visually and care about the final document. Weakest on compliance-clarity — flag for Validate Design.',
+      revival: 'WYSIWYG/branding emphasis returns as a design priority.',
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 1 · Prototype',
+    name: 'Prototype — Command Bar',
+    status: 'prototype',
+    src: 'invoicing-flow/prototypes/variants/command-bar/prototype.html',
+    details: {
+      model: 'Clickable, Xflow-token fidelity, real UX copy',
+      hypothesis: 'For experienced direct users, the fastest path to an invoice is to describe it once and confirm. Turning the form into a confirmation surface (type → parse → confirm auto-filled compliance → activate) cuts the 4-step wizard to a single screen.',
+      pros: ['Happy path: type → parse → confirm → activate', '9 harness states — covers edge cases (partner not matched, low parse confidence, save error)', 'Model A (Smart Form) wired as the graceful fallback', 'Real UX copy from ux-copy.md; Xflow token fidelity; real snapshot for the host list page'],
+      cons: ['3 "new surface" states still pending Validate Design before handoff', 'Parse → structured-field round-trip (re-type vs. structured edit) not yet resolved', 'Currency in command-bar placeholder — open copy question'],
+      best: 'The primary candidate for stakeholder review. Degrades to Model A for new users and low-confidence parses.',
+      revival: null,
+      note: 'Pending stakeholder review. Not yet shared. Visual Design handoff blocked until the 3 new-surface states are validated.',
+    },
+  },
+
+  // ── ROUND BREAK ────────────────────────────────────────────────────────────
+  {
+    type: 'roundbreak',
+    project: 'Invoicing Flow', round: '',
+    name: 'Earlier exploration',
+    status: null,
+    label: 'Invoicing Flow — Round 2',
+    title: 'Earlier structural exploration.',
+    desc: 'Before locking onto the fewer-steps driver, an earlier round explored the structural space: different layouts, containers, and paradigms for the existing wizard. These were set aside — not deleted — when Round 1 restarted with a single focused objective.',
+    badges: ['Single-page form', 'Document-direct', 'Quick-create drawer', 'Accordion card stack'],
+  },
+
+  // ── INVOICING FLOW — ROUND 2 (earlier structural exploration) ───────────────
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 2 · 01',
+    name: 'Single-Page Form',
+    status: 'superseded',
+    src: 'invoicing-flow/wireframes/iterations/round-1/01-single-page-form/wireframe.html',
+    details: {
+      model: 'One-page, scroll-to-complete',
+      hypothesis: 'Removing the wizard structure reduces context-switching overhead. Experienced users who run invoicing repeatedly don\'t need guided step-by-step — they know the fields. A single form lets them tab through quickly, reference earlier sections without Back navigation, and see overall completion state at a glance.',
+      pros: ['Zero back-navigation cost — any field is reachable by scrolling', 'Compliance fields visible earlier — reduces end-of-funnel surprise', 'Simpler mental model for repeat users', 'Same split-panel layout as today — preview familiarity preserved'],
+      cons: ['Form is long — users might feel overwhelmed on first use', 'No progressive disclosure — all fields visible before partner is selected', 'Scroll position management needs careful design'],
+      best: 'Power users and finance teams who create invoices frequently and know the fields well.',
+      revival: null,
+      note: 'Superseded. Evolved into R2-01 (Smart Single-Screen Form) on the Round 2 fresh restart.',
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 2 · 02',
+    name: 'Document-Direct',
+    status: 'superseded',
+    src: 'invoicing-flow/wireframes/iterations/round-1/02-document-direct/wireframe.html',
+    details: {
+      model: 'The invoice IS the interface',
+      hypothesis: 'The main cognitive friction in the current wizard is the separation between form fields and the final document. Making the document clickable eliminates that translation — users see exactly what they\'re editing and why.',
+      pros: ['Zero translation between form and output — WYSIWYG experience', 'Users can edit sections in any order (non-linear)', 'Progress visible at a glance in the toolbar', 'Branding edits feel immediate and satisfying'],
+      cons: ['Document region click targets may be unclear to new users — discoverability risk', 'Floating panel anchoring is complex to implement', 'Compliance fields have no natural document home — awkward in this model'],
+      best: 'Design-conscious users who care about what the invoice looks like. Less suited for compliance-heavy workflows.',
+      revival: null,
+      note: 'Superseded. Evolved into R2-04 (Direct-on-Document) rebuilt with region popovers and a footer checklist.',
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 2 · 03',
+    name: 'Quick-Create Drawer',
+    status: 'parked',
+    src: 'invoicing-flow/wireframes/iterations/round-1/03-quick-drawer/wireframe.html',
+    details: {
+      model: 'Invoice creation as a task, not a takeover',
+      hypothesis: 'Full-screen modal creation breaks context — users lose sight of the list they were looking at. A right drawer (65% width) preserves spatial continuity: the new invoice appears in the same place the user is already looking at.',
+      pros: ['Context preserved — list stays visible behind the drawer', 'Collapsed step summaries reduce form length', 'New invoice row appears naturally in the list on close', 'Consistent with drawer patterns used elsewhere in dashboards'],
+      cons: ['65% width is tight for the full split-panel preview', 'Step-by-step still present — same wizard friction, narrower container', 'On smaller viewports the drawer may cover the list entirely'],
+      best: 'Users who work through batches of invoices in a session and need to keep the list in view.',
+      revival: 'Multitasking or batch creation workflow becomes a priority.',
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 2 · 04',
+    name: 'Accordion Card Stack',
+    status: 'parked',
+    src: 'invoicing-flow/wireframes/iterations/round-1/04-accordion-steps/wireframe.html',
+    details: {
+      model: 'Step-free card progression',
+      hypothesis: 'The current tab-based wizard hides later steps entirely, creating "how much longer?" anxiety. Showing all sections upfront (even locked) sets clear expectations. Inline validation per-section catches errors earlier, without a full-form submit failure.',
+      pros: ['All steps visible at once — user knows exactly what\'s coming', 'Inline per-section validation catches errors early', 'Edit link on collapsed cards is faster than wizard Back navigation', 'Compliance fields visible in card preview even when locked — reduces surprise'],
+      cons: ['"Activate" button locked until all sections done — no shortcut', 'Users may try to click locked cards and feel frustrated', 'If Card 3 is long, it may feel like the form suddenly grew'],
+      best: 'New-to-moderate users who benefit from seeing the full scope upfront. Good for compliance-sensitive organisations.',
+      revival: 'High error rate in step navigation; if guided structure is needed.',
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Invoicing Flow', round: 'Round 2 · Prototype',
+    name: 'Prototype — Accordion Card Stack',
+    status: 'prototype',
+    src: 'invoicing-flow/prototypes/variants/accordion-card-stack/prototype.html',
+    details: {
+      model: 'Clickable prototype of R1-04',
+      hypothesis: 'Built to test whether the accordion model feels less step-heavy in interaction than the current wizard. Stakeholder selection point before Round 2 reset.',
+      pros: ['Clickable and interactive', 'Happy path through all four cards', 'Validates the "all steps visible upfront" concept end-to-end'],
+      cons: ['Still fundamentally step-based — counter to the "fewer steps" driver identified in Round 2', 'Superseded when Round 2 restarted with a single-driver focus'],
+      best: 'Reference only. Superseded by the Command Bar prototype.',
+      revival: null,
+      note: 'Superseded by Round 2. Kept for reference — not carried to handoff.',
+    },
+  },
+
+  // ── PROJECT SEPARATOR: CREATE INVOICE ──────────────────────────────────────
+  {
+    type: 'separator',
+    project: 'Create Invoice',
+    icon: '🐛',
+    eyebrow: 'Project 2 of 3',
+    title: 'Create Invoice — Bug Fix + Exploration',
+    desc: 'Three targeted bugs scoped from a 5-bug backlog. Full workflow run: requirements, live PostHog funnel data, Mobbin market research, user stories, IA, and 3 lo-fi models. Awaiting designer review.',
+    stats: [
+      { num: '3', label: 'Bugs in scope' },
+      { num: '20.75%', label: 'Funnel completion (90d)' },
+      { num: '−52%', label: 'Drop at Partner Selection' },
+      { num: '3', label: 'Wireframe models' },
+    ],
+  },
+
+  // ── CREATE INVOICE — ROUND 1 ───────────────────────────────────────────────
+  {
+    type: 'wireframe',
+    project: 'Create Invoice', round: 'Round 1 · Model A',
+    name: 'Polish Current Structure',
+    status: 'review',
+    src: 'create-invoice/wireframes/iterations/round-1/A-polish-current/wireframe.html',
+    details: {
+      model: 'Friction is in the steps, not the wizard',
+      hypothesis: 'The 4-step wizard structure is fundamentally sound. Drop-off at Partner Selection (−52%) and Item Entry (−41%) is caused by interaction friction within those steps — not by the wizard paradigm itself. Fix the friction, fix the bugs, and conversion recovers without a structural overhaul.',
+      pros: ['Minimal migration risk — same mental model, same nav', 'Targeted fixes map 1-to-1 to known drop-off causes', 'Safest: if conversion improves, we know which fix did it'],
+      cons: ['4 steps still feels like a commitment if users just want to try', 'Doesn\'t test whether the paradigm itself is a problem (US-8)', 'Items + partner are still split — two separate "enter data" moments'],
+      best: 'The risk-averse path. Best when confidence in the wizard paradigm is high and the team wants attributable, reversible fixes.',
+      revival: null,
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Create Invoice', round: 'Round 1 · Model B',
+    name: 'Lighter 3-Step Wizard',
+    status: 'review',
+    src: 'create-invoice/wireframes/iterations/round-1/B-3-step-wizard/wireframe.html',
+    details: {
+      model: 'Merge Client + Products into "Who & What"',
+      hypothesis: 'Merging Client and Products into a single "Who & What" step reduces the perceived commitment from 4 steps to 3. Partner + item entry in one screen reflects the natural mental model of "I\'m invoicing Acme Corp for this work."',
+      pros: ['Step count drops 4 → 3 — lower perceived funnel depth', 'Partner + item entry in one pass matches natural mental model', 'All existing bug fixes carried over', 'Easily reversible split if A/B test favours separation'],
+      cons: ['Step 1 is now longer; users may not scroll to see item entry', 'Still has a "Next" gate after items — some friction remains', 'Scroll position management matters for UX polish in prototype'],
+      best: 'Middle ground: structural improvement without a paradigm change. Good for A/B testing against Model A.',
+      revival: null,
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Create Invoice', round: 'Round 1 · Model C',
+    name: 'Single-Scroll Canvas',
+    status: 'review',
+    src: 'create-invoice/wireframes/iterations/round-1/C-single-scroll/wireframe.html',
+    details: {
+      model: 'The wizard paradigm itself creates funnel anxiety',
+      hypothesis: 'The wizard shows users a gated funnel of unknown length. Replace it with a single continuous form where all four sections are always visible. The Send button unlocks when all required fields are complete. Users never hit a "Next" gate — fill in any order, at any pace.',
+      pros: ['No funnel anxiety — user sees the full scope upfront', 'Fill in any order — suits users who know their invoice number before their partner', 'Preview is always visible — fee and preview sync surprises disappear', 'Most differentiated paradigm — tests US-8 (structural) cleanly'],
+      cons: ['No clear progress signal while filling (addressed by anchor nav + progress bar)', 'Longer scroll; some users may not reach the payment section', 'Harder to enforce sequential validation (e.g. currency must be set before items)', 'Highest implementation delta from current design'],
+      best: 'The paradigm test. Best when the team suspects the wizard structure itself — not the content — is what drives abandonment.',
+      revival: null,
+      note: null,
+    },
+  },
+
+  // ── PROJECT SEPARATOR: BALANCES ────────────────────────────────────────────
+  {
+    type: 'separator',
+    project: 'Balances',
+    icon: '💰',
+    eyebrow: 'Project 3 of 3',
+    title: 'Balances — Currency Card Layout',
+    desc: 'Standalone lo-fi exploration. The currency card on /balances is too tall and too narrow. Goal: de-verticalize the currency selector so balance cards gain width. 3 candidate layouts from a live page snapshot.',
+    stats: [
+      { num: '26', label: 'Currencies on page' },
+      { num: '3', label: 'Candidate layouts' },
+      { num: 'Standalone', label: 'No full workflow' },
+    ],
+  },
+
+  // ── BALANCES — ROUND 1 ─────────────────────────────────────────────────────
+  {
+    type: 'wireframe',
+    project: 'Balances', round: 'Round 1 · 01',
+    name: 'Top Dropdown Selector',
+    status: 'candidate',
+    src: 'balances/wireframes/iterations/round-1/01-top-dropdown/wireframe.html',
+    details: {
+      model: 'Active-currency focus',
+      hypothesis: 'Users land on Balances to act on a specific currency. They don\'t need all 26 visible at once — a searchable picker is enough, and removing the column gives every card ~33% more width.',
+      pros: ['Maximum reclaimed width — the entire left column is gone', 'Search-first scales cleanly to 26 or more currencies', 'Familiar combobox pattern; low build cost'],
+      cons: ['Loses at-a-glance visibility of which currencies hold funds — now takes a click', 'A power user comparing balances across currencies must open/close the picker repeatedly'],
+      best: 'Accounts where one or two currencies dominate and the rest are rarely touched.',
+      revival: null,
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Balances', round: 'Round 1 · 02',
+    name: 'Horizontal Currency Rail',
+    status: 'candidate',
+    src: 'balances/wireframes/iterations/round-1/02-horizontal-rail/wireframe.html',
+    details: {
+      model: 'Glanceable multi-currency rail',
+      hypothesis: 'Visibility of balances across currencies is valuable, but it doesn\'t need a vertical column. A horizontal rail of currency chips (code + balance) keeps the overview while returning the column\'s width to the content. Chips sort funded-first.',
+      pros: ['Keeps multi-currency balances glanceable — no click to see what holds funds', 'Reclaims the left column width for the cards below', 'Chips sort funded-first so meaningful currencies sit at the start of the rail'],
+      cons: ['Horizontal scrolling for 26 items is less scannable than a vertical list', 'Adds vertical height at the top (the rail band)'],
+      best: 'Accounts holding funds in several currencies who want a balances-at-a-glance overview.',
+      revival: null,
+      note: null,
+    },
+  },
+
+  {
+    type: 'wireframe',
+    project: 'Balances', round: 'Round 1 · 03',
+    name: 'Segmented + More',
+    status: 'candidate',
+    src: 'balances/wireframes/iterations/round-1/03-segmented-more/wireframe.html',
+    details: {
+      model: 'Two-tier — funded vs long-tail',
+      hypothesis: 'The vertical column spends most of its height on currencies that hold nothing. Surface only funded/preferred currencies inline as a horizontal segmented control; tuck the 22 zero-balance currencies behind "More currencies." Strongest signal-to-noise ratio.',
+      pros: ['Strongest signal-to-noise — only currencies that matter are on screen', 'Reclaims the full column width', '"More (22 · all 0.00)" label makes the hidden set\'s state explicit, so nothing feels lost'],
+      cons: ['"Funded" set can grow; needs a rule for how many segments fit before they collapse', 'Slightly more logic to determine funded vs long-tail'],
+      best: 'The common real-world case: a few active currencies plus a long tail of zero balances.',
+      revival: null,
+      note: null,
+    },
+  },
+
+];
+
+// ── STATUS CONFIG ─────────────────────────────────────────────────────────────
+const STATUS = {
+  primary:    { label: 'Primary ★',   cls: 'badge-primary' },
+  fallback:   { label: 'Fallback ★',  cls: 'badge-fallback' },
+  parked:     { label: 'Parked',       cls: 'badge-parked' },
+  superseded: { label: 'Superseded',   cls: 'badge-superseded' },
+  review:     { label: 'Under Review', cls: 'badge-review' },
+  candidate:  { label: 'Candidate',    cls: 'badge-candidate' },
+  prototype:  { label: 'Prototype',    cls: 'badge-prototype' },
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let current = 0;
+let drawerOpen = false;
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(idx) {
+  current = idx;
+  const slide = SLIDES[idx];
+  const total = SLIDES.length;
+
+  // Progress bar
+  document.getElementById('progress').style.width = ((idx / (total - 1)) * 100) + '%';
+
+  // Nav buttons
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = idx === total - 1;
+  document.getElementById('bar-counter').textContent = `${idx + 1} of ${total}`;
+
+  // Close drawer when navigating
+  closeDrawer();
+
+  // Hide all stage elements
+  document.getElementById('wf-iframe').style.display = 'none';
+  document.getElementById('sep-slide').classList.remove('visible');
+  document.getElementById('rb-slide').classList.remove('visible');
+
+  if (slide.type === 'separator') {
+    renderSeparator(slide);
+  } else if (slide.type === 'roundbreak') {
+    renderRoundBreak(slide);
+  } else {
+    renderWireframe(slide);
+  }
+
+  // Top bar
+  const hasStatus = slide.status && STATUS[slide.status];
+  const chev1 = document.getElementById('bar-chev1');
+  const chev2 = document.getElementById('bar-chev2');
+  const barRound = document.getElementById('bar-round');
+
+  if (slide.type === 'separator' || slide.type === 'roundbreak') {
+    document.getElementById('bar-project').textContent = '';
+    barRound.textContent = '';
+    document.getElementById('bar-name').textContent = slide.type === 'separator' ? slide.title : slide.title;
+    document.getElementById('bar-badge').innerHTML = '';
+    chev1.style.display = 'none';
+    chev2.style.display = 'none';
+    barRound.style.display = 'none';
+  } else {
+    document.getElementById('bar-project').textContent = slide.project;
+    barRound.textContent = slide.round;
+    document.getElementById('bar-name').textContent = slide.name;
+    document.getElementById('bar-badge').innerHTML = hasStatus
+      ? `<span class="badge ${STATUS[slide.status].cls}">${STATUS[slide.status].label}</span>` : '';
+    chev1.style.display = '';
+    chev2.style.display = '';
+    barRound.style.display = '';
+  }
+
+  // Details button
+  const showDetails = slide.type === 'wireframe' && slide.details;
+  document.getElementById('details-btn').classList.toggle('hidden', !showDetails);
+}
+
+function renderSeparator(slide) {
+  document.getElementById('sep-eyebrow').textContent = slide.eyebrow;
+  document.getElementById('sep-icon').textContent = slide.icon;
+  document.getElementById('sep-title').textContent = slide.title;
+  document.getElementById('sep-desc').textContent = slide.desc;
+  document.getElementById('sep-stats').innerHTML = slide.stats.map(s =>
+    `<div class="sep-stat"><div class="sep-stat-num">${s.num}</div><div class="sep-stat-label">${s.label}</div></div>`
+  ).join('');
+  document.getElementById('sep-slide').classList.add('visible');
+}
+
+function renderRoundBreak(slide) {
+  document.getElementById('rb-label').textContent = slide.label;
+  document.getElementById('rb-title').textContent = slide.title;
+  document.getElementById('rb-desc').textContent = slide.desc;
+  document.getElementById('rb-badges').innerHTML = slide.badges.map(b =>
+    `<span class="rb-badge">${b}</span>`
+  ).join('');
+  document.getElementById('rb-slide').classList.add('visible');
+}
+
+function renderWireframe(slide) {
+  const iframe = document.getElementById('wf-iframe');
+  iframe.style.display = 'block';
+  iframe.src = slide.src;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function go(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= SLIDES.length) return;
+  render(next);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  if (e.key === 'Escape') closeDrawer();
+});
+
+// ── DRAWER ────────────────────────────────────────────────────────────────────
+function toggleDrawer() {
+  drawerOpen ? closeDrawer() : openDrawer();
+}
+
+function openDrawer() {
+  const slide = SLIDES[current];
+  if (!slide.details) return;
+  drawerOpen = true;
+
+  // Populate
+  const d = slide.details;
+  document.getElementById('drawer-title').textContent = slide.name;
+
+  let html = '';
+
+  if (slide.status && STATUS[slide.status]) {
+    html += `<div class="d-section full"><div class="d-label">Status</div><div><span class="badge ${STATUS[slide.status].cls}" style="font-size:12px;padding:4px 10px;">${STATUS[slide.status].label}</span></div></div>`;
+  }
+
+  html += `<div class="d-section full"><div class="d-label">Mental Model</div><div class="d-model">${d.model}</div></div>`;
+  html += `<div class="d-section full"><div class="d-label">Hypothesis</div><div class="d-text">${d.hypothesis}</div></div>`;
+
+  html += `<div class="d-section"><div class="d-label">Pros</div><ul class="d-list">`;
+  d.pros.forEach(p => html += `<li class="d-pro">${p}</li>`);
+  html += `</ul></div>`;
+
+  html += `<div class="d-section"><div class="d-label">Cons</div><ul class="d-list">`;
+  d.cons.forEach(c => html += `<li class="d-con">${c}</li>`);
+  html += `</ul></div>`;
+
+  html += `<div class="d-section full"><div class="d-label">Best for</div><div class="d-best">${d.best}</div></div>`;
+
+  if (d.revival) {
+    html += `<div class="d-section full"><div class="d-label">Revival trigger</div><div class="d-revival">⟳ ${d.revival}</div></div>`;
+  }
+  if (d.note) {
+    html += `<div class="d-section full"><div class="d-label">Note</div><div class="d-note">${d.note}</div></div>`;
+  }
+
+  document.getElementById('drawer-body').innerHTML = html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('stage').classList.add('drawer-open');
+  document.getElementById('details-btn').textContent = 'Close ↓';
+}
+
+function closeDrawer() {
+  if (!drawerOpen) return;
+  drawerOpen = false;
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('stage').classList.remove('drawer-open');
+  document.getElementById('details-btn').textContent = 'Details ↑';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+render(0);
+</script>
+</body>
+</html>

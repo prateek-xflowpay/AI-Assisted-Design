@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R2 · 04 Direct-on-Document — Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; }
+  .topnav { height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+  .shell-body { display: flex; height: calc(100vh - 48px); position: relative; }
+  .sidebar { width: 220px; background: #343A40; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; }
+  .sidebar-item { height: 38px; display: flex; align-items: center; padding: 0 20px; color: #ADB5BD; font-size: 13px; gap: 10px; }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 15px; height: 15px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+  .main { flex: 1; background: #F8F9FA; opacity: 0.2; }
+  .overlay { position: absolute; top: 0; left: 220px; right: 0; bottom: 0; background: #F1F3F5; display: flex; flex-direction: column; z-index: 10; }
+  .overlay-header { height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0; }
+  .overlay-title { font-size: 16px; font-weight: 600; color: #212529; }
+  .overlay-sub { font-size: 13px; color: #ADB5BD; }
+  .header-tools { margin-left:auto; display:flex; gap:8px; align-items:center;}
+  .tool-btn { height:30px; border:1px solid #CED4DA; background:#fff; border-radius:6px; padding:0 12px; font-size:12px; color:#6C757D; cursor:pointer;}
+  .overlay-close { width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+  .overlay-body { flex: 1; overflow-y: auto; padding: 28px; display:flex; justify-content:center; position:relative;}
+  .annotation-bar { position:absolute; top:12px; left:28px; right:28px; background: #495057; color: #fff; font-size: 11px; padding: 8px 14px; line-height: 1.5; border-radius: 4px; z-index:5; }
+  /* The document IS the canvas */
+  .canvas { width: 720px; margin-top: 60px; }
+  .doc { background:#fff; border-radius:6px; box-shadow: rgba(68,78,94,0.15) 0px 4px 20px; padding: 40px 44px; display:flex; flex-direction:column; gap:22px; }
+  /* editable region affordance */
+  .edit-region { border: 1px dashed transparent; border-radius:6px; padding:8px 10px; margin:-8px -10px; cursor:pointer; position:relative;}
+  .edit-region:hover { border-color:#ADB5BD; background:#F8F9FA;}
+  .edit-region.active { border:1.5px solid #495057; background:#fff; box-shadow: rgba(68,78,94,0.12) 0px 2px 10px;}
+  .region-tag { position:absolute; top:-9px; left:8px; font-size:9px; font-weight:600; background:#495057; color:#fff; border-radius:3px; padding:1px 6px; text-transform:uppercase; letter-spacing:0.04em;}
+  .doc-head { display:flex; justify-content:space-between; align-items:flex-start;}
+  .doc-logo { width:80px;height:30px;background:#E9ECEF;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ADB5BD;}
+  .doc-title { font-size:24px; font-weight:700; color:#CED4DA; letter-spacing:0.05em;}
+  .doc-sub { font-size:11px; color:#ADB5BD; margin-top:2px;}
+  .parties { display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+  .pty-lbl { font-size:10px; color:#ADB5BD; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;}
+  .pty-name { font-size:14px; font-weight:600; color:#212529;}
+  .pty-line { height:9px; background:#E9ECEF; border-radius:2px; margin-top:6px;}
+  .placeholder-name { font-size:14px; font-weight:500; color:#ADB5BD;}
+  .doc-divider { height:1px; background:#E9ECEF;}
+  .meta3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .meta-val { font-size:13px; color:#212529; font-weight:500;}
+  /* items table */
+  .it { width:100%; border-collapse:collapse;}
+  .it th { font-size:10px; color:#ADB5BD; text-transform:uppercase; letter-spacing:0.05em; text-align:left; padding:6px 8px; border-bottom:1px solid #DEE2E6;}
+  .it td { font-size:13px; color:#495057; padding:9px 8px; border-bottom:1px solid #F1F3F5;}
+  .add-line { font-size:12px; color:#6C757D; padding:8px; cursor:pointer;}
+  .totals { display:flex; flex-direction:column; align-items:flex-end; gap:6px;}
+  .tot-row { display:flex; gap:24px; font-size:13px; color:#6C757D;}
+  .tot-row.grand { font-size:15px; font-weight:700; color:#212529;}
+  /* inline popover (shown on active region) */
+  .popover { position:absolute; top:100%; left:8px; margin-top:8px; width:300px; background:#fff; border:1px solid #DEE2E6; border-radius:8px; box-shadow: rgba(68,78,94,0.18) 0px 6px 24px; padding:14px; z-index:20;}
+  .pop-title { font-size:11px; font-weight:600; color:#6C757D; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;}
+  .pop-field { margin-bottom:10px;}
+  .pop-label { font-size:11px; color:#495057; margin-bottom:4px;}
+  .pop-input { height:34px; border:1px solid #CED4DA; border-radius:6px; padding:0 10px; font-size:13px; color:#495057; display:flex; align-items:center;}
+  .pop-input.placeholder { color:#ADB5BD;}
+  .pop-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:6px;}
+  .pop-btn { height:30px; border-radius:6px; border:none; font-size:12px; padding:0 14px; cursor:pointer; font-family:inherit;}
+  .pop-btn.primary { background:#495057; color:#fff;}
+  .pop-btn.ghost { background:#F1F3F5; color:#6C757D;}
+  .footer-doc { font-size:11px; color:#ADB5BD;}
+  /* Footer */
+  .overlay-footer { height: 60px; background: #fff; border-top: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+  .btn-primary { height: 38px; background: #495057; color: #fff; border: none; border-radius: 6px; padding: 0 22px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-ghost { height: 38px; background: transparent; color: #ADB5BD; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .checklist { margin-left:auto; display:flex; gap:14px; align-items:center; font-size:12px; color:#ADB5BD;}
+  .chk { display:flex; align-items:center; gap:5px;}
+  .chk .box { width:14px;height:14px;border-radius:3px;border:1.5px solid #ADB5BD;display:flex;align-items:center;justify-content:center;font-size:10px;}
+  .chk.done .box { background:#6C757D; border-color:#6C757D; color:#fff;}
+  .chk.done { color:#495057;}
+</style>
+</head>
+<body>
+<div class="topnav"><div class="topnav-logo"></div><div class="topnav-spacer"></div><div class="topnav-badge"></div><div class="topnav-avatar"></div></div>
+<div class="shell-body">
+  <div class="sidebar">
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+    <div class="sidebar-section">Receive Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+    <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+    <div class="sidebar-section">Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+  </div>
+  <div class="main"></div>
+
+  <div class="overlay">
+    <div class="overlay-header">
+      <div class="overlay-title">Create Invoice</div>
+      <div class="overlay-sub">Click any part of the invoice to edit it</div>
+      <div class="header-tools">
+        <div class="tool-btn">Change Template</div>
+        <div class="tool-btn">Edit Branding</div>
+        <div class="overlay-close">×</div>
+      </div>
+    </div>
+
+    <div class="overlay-body">
+      <div class="annotation-bar">
+        <strong>Model D — Direct-on-document:</strong> No left form, no steps, no preview/form split. The invoice document itself is the single editable surface. Hovering a region reveals it's editable; clicking opens a small inline popover for that region (here: the Bill-To region is active). Compliance lives in a popover on the document footer. Progress = a checklist of required regions in the footer.
+      </div>
+
+      <div class="canvas">
+        <div class="doc">
+
+          <!-- Header region -->
+          <div class="edit-region doc-head">
+            <span class="region-tag">Branding</span>
+            <div class="doc-logo">LOGO</div>
+            <div style="text-align:right;"><div class="doc-title">INVOICE</div><div class="doc-sub">INV-ACM-00045</div></div>
+          </div>
+
+          <!-- Parties -->
+          <div class="parties">
+            <div class="edit-region">
+              <span class="region-tag">From</span>
+              <div class="pty-lbl">From</div>
+              <div class="pty-name">Your Company</div>
+              <div class="pty-line" style="width:70%;"></div>
+            </div>
+
+            <!-- ACTIVE region: Bill To with popover -->
+            <div class="edit-region active">
+              <span class="region-tag">Bill To</span>
+              <div class="pty-lbl">Bill To</div>
+              <div class="placeholder-name">Click to choose partner</div>
+              <div class="pty-line" style="width:60%; opacity:0.5;"></div>
+
+              <div class="popover">
+                <div class="pop-title">Choose partner</div>
+                <div class="pop-field">
+                  <div class="pop-label">Partner</div>
+                  <div class="pop-input placeholder">Search partners… ▾</div>
+                </div>
+                <div class="pop-field">
+                  <div class="pop-label">Currency</div>
+                  <div class="pop-input">USD</div>
+                </div>
+                <div style="font-size:11px;color:#ADB5BD;margin-bottom:8px;">+ Add new partner</div>
+                <div class="pop-actions">
+                  <button class="pop-btn ghost">Cancel</button>
+                  <button class="pop-btn primary">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-divider"></div>
+
+          <!-- Meta row -->
+          <div class="edit-region meta3">
+            <span class="region-tag">Dates</span>
+            <div><div class="pty-lbl">Invoice date</div><div class="meta-val">24 Jun 2026</div></div>
+            <div><div class="pty-lbl">Due date</div><div class="meta-val">24 Jul 2026</div></div>
+            <div><div class="pty-lbl">Amount due</div><div class="meta-val">USD 5,000.00</div></div>
+          </div>
+
+          <!-- Items region -->
+          <div class="edit-region">
+            <span class="region-tag">Line items</span>
+            <table class="it">
+              <thead><tr><th style="width:50%;">Item</th><th>Qty</th><th style="text-align:right;">Unit price</th><th style="text-align:right;">Amount</th></tr></thead>
+              <tbody>
+                <tr><td>Software Development</td><td>1</td><td style="text-align:right;">5,000.00</td><td style="text-align:right;font-weight:600;">5,000.00</td></tr>
+                <tr><td colspan="4" class="add-line">+ Add line item</td></tr>
+              </tbody>
+            </table>
+            <div class="totals" style="margin-top:10px;">
+              <div class="tot-row"><span>Subtotal</span><span>USD 5,000.00</span></div>
+              <div class="tot-row grand"><span>Total Due</span><span>USD 5,000.00</span></div>
+            </div>
+          </div>
+
+          <div class="doc-divider"></div>
+
+          <!-- Footer / compliance + payment region -->
+          <div class="edit-region">
+            <span class="region-tag">Payment &amp; compliance</span>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+              <div><div class="pty-lbl">Pay by</div><div class="footer-doc">Bank transfer (VBAN) · Payment link</div></div>
+              <div><div class="pty-lbl">Purpose / Txn</div><div class="footer-doc">P1006 · Services <span style="color:#CED4DA;">(auto)</span></div></div>
+            </div>
+            <div class="footer-doc" style="margin-top:10px;">Terms: net-30. Late fee 10% per month after due date.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay-footer">
+      <button class="btn-ghost">Save as Draft</button>
+      <div class="checklist">
+        <div class="chk done"><span class="box">✓</span> Items</div>
+        <div class="chk"><span class="box"></span> Partner</div>
+        <div class="chk done"><span class="box">✓</span> Compliance</div>
+        <div class="chk done"><span class="box">✓</span> Payment</div>
+      </div>
+      <button class="btn-primary" style="margin-left:16px; opacity:0.5; cursor:not-allowed;">Activate Invoice →</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

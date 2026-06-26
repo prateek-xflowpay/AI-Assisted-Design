@@ -1,0 +1,43 @@
+flowchart TD
+    A([Invoices list]) -->|Click 'Create Invoice'| B{Template saved?}
+    B -->|First time| C[Theme modal]
+    B -->|Returning| D[Overlay opens — all 4 cards visible, only Card 1 open]
+    C -->|Start| D
+
+    D --> C1[Card 1 open: Partner selector]
+    C1 -->|Partner selected · click Continue| C1v{Valid?}
+    C1v -->|Yes| C1ok[Card 1 collapses to summary · Card 2 unlocks and opens]
+    C1v -->|No| C1err[Inline validation error · stays open]
+    C1err --> C1
+
+    C1ok --> C2[Card 2 open: Line items]
+    C2 -->|Items added · click Continue| C2v{≥1 item?}
+    C2v -->|Yes| C2ok[Card 2 collapses · Card 3 unlocks and opens]
+    C2v -->|No| C2err[Error: Add at least one item]
+    C2err --> C2
+
+    C2ok --> C3[Card 3 open: Invoice Details + Compliance]
+    C3 -->|Fields filled · click Continue| C3v{Required fields complete?}
+    C3v -->|Yes| C3ok[Card 3 collapses · Card 4 unlocks and opens]
+    C3v -->|No| C3err[Inline validation error]
+    C3err --> C3
+
+    C3ok --> C4[Card 4 open: Payment Options]
+    C4 -->|Configure toggles| C4ok[Activate Invoice button enabled in footer]
+
+    C4ok --> I{Submit}
+    I -->|Save Draft| J([Invoice Draft])
+    I -->|Activate| K{Partner status?}
+    K -->|Activated| L([Invoice Active · navigate to detail])
+    K -->|Verifying| M([Draft saved · dialog])
+
+    C1ok --> |Click Edit on collapsed card| C1
+    C2ok --> |Click Edit on collapsed card| C2
+
+    style A fill:#ADB5BD,color:#fff
+    style L fill:#6C757D,color:#fff
+    style M fill:#6C757D,color:#fff
+    style J fill:#6C757D,color:#fff
+    style C1err fill:#DEE2E6,color:#495057
+    style C2err fill:#DEE2E6,color:#495057
+    style C3err fill:#DEE2E6,color:#495057

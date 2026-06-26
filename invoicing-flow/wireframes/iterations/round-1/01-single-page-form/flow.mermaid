@@ -1,0 +1,24 @@
+flowchart TD
+    A([Invoices list]) -->|Click 'Add Invoice ▾ > Create Invoice'| B{Template saved?}
+    B -->|First time| C[Theme modal — pick template]
+    B -->|Returning user| D[Single-page form opens]
+    C -->|Start| D
+
+    D --> E[Section 1: Select partner]
+    E -->|Partner chosen| E1[Auto-save · preview populates]
+    E1 --> F[Section 2: Add line items]
+    F -->|Items entered| F1[Running total updates · preview updates]
+    F1 --> G[Section 3: Invoice details + Compliance]
+    G -->|Fields filled| H[Section 4: Payment options]
+    H --> I{Ready to submit?}
+
+    I -->|Save for later| J([Invoice saved as Draft])
+    I -->|Click Activate Invoice| K{Partner status?}
+    K -->|Activated| L([Invoice Active · navigate to detail])
+    K -->|Verifying / Hold| M([Invoice saved as Draft · dialog shown])
+
+    style A fill:#ADB5BD,color:#fff
+    style L fill:#6C757D,color:#fff
+    style M fill:#6C757D,color:#fff
+    style J fill:#6C757D,color:#fff
+    style C fill:#DEE2E6,color:#495057

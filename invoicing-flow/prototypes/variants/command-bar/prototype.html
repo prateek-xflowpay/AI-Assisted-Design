@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype — Invoice Create · Command Bar (Model B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:rgb(19,26,36); --text-2:rgb(79,85,111); --text-3:rgb(118,124,148); --text-4:rgb(169,175,198);
+  --border:rgb(207,212,229); --blue:rgb(62,139,254); --blue-press:rgb(35,114,233); --blue-muted:rgb(128,177,249);
+  --white:#fff; --surface-1:rgb(241,244,255); --surface-2:rgb(248,249,255);
+  --card-shadow:rgba(68,78,94,0.13) 0px 1px 3px 0px;
+  --green-text:rgb(99,136,38); --green-bg:rgb(232,248,207);
+  --amber-text:rgb(182,115,37); --amber-bg:rgb(255,214,153);
+  --red-text:rgb(176,42,42); --red-bg:rgb(255,225,225);
+  --info-bg:rgb(222,236,255);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:20px;color:var(--ink);background:var(--surface-1);overflow:hidden;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+/* shell */
+.topnav{height:52px;background:#0f1623;display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0;position:relative;z-index:50;}
+.topnav-burger{width:18px;height:13px;display:flex;flex-direction:column;justify-content:space-between;}
+.topnav-burger span{height:2px;background:#7f8aa8;border-radius:2px;}
+.topnav-logo{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.02em;}
+.topnav-logo-mark{width:26px;height:26px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;}
+.topnav-spacer{flex:1;}
+.topnav-ico{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:#aeb4c9;font-size:13px;}
+.shell-body{display:flex;height:calc(100vh - 52px);overflow:hidden;}
+.sidebar{width:240px;background:#0f1623;flex-shrink:0;padding:14px 0;color:var(--text-4);overflow-y:auto;display:flex;flex-direction:column;}
+.side-item{height:36px;display:flex;align-items:center;padding:0 20px;gap:11px;font-size:13px;color:#aeb4c9;}
+.side-item.active{background:rgba(255,255,255,0.08);color:#fff;box-shadow:inset 3px 0 0 var(--blue);}
+.side-ico{width:15px;height:15px;border-radius:3px;background:currentColor;opacity:.55;}
+.side-sec{padding:12px 20px 6px;font-size:12px;font-weight:600;color:#cdd3e6;display:flex;align-items:center;gap:6px;}
+.side-sec .chev{margin-left:auto;color:#5a6275;font-size:10px;}
+.side-foot{margin-top:auto;padding-top:14px;}
+.side-promo{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;margin:0 12px 10px;}
+.side-promo .t{font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:6px;}
+.side-promo .b{font-size:11px;color:#8b93ad;margin-top:5px;line-height:1.4;}
+.side-toggle{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin:0 12px;}
+.side-toggle .tg{width:30px;height:17px;background:var(--blue);border-radius:9px;position:relative;flex-shrink:0;}
+.side-toggle .tg::after{content:"";position:absolute;width:13px;height:13px;background:#fff;border-radius:50%;top:2px;right:2px;}
+.side-toggle .tx{font-size:11px;color:#8b93ad;}
+.side-toggle .tx b{color:#fff;font-weight:600;display:block;font-size:12px;}
+.main{flex:1;background:var(--surface-2);overflow-y:auto;padding:24px 28px;}
+
+/* list page */
+.main .page-title{font-size:22px;font-weight:700;margin-bottom:14px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.fchip{font-size:12px;color:var(--text-2);background:#fff;border:1px solid var(--border);border-radius:18px;padding:5px 12px;}
+.fchip b{color:var(--text-3);font-weight:600;margin-left:3px;}
+.fchip.active{border-color:var(--blue);color:var(--blue-press);background:var(--info-bg);}
+.fchip.active b{color:var(--blue-press);}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;}
+.tb-spacer{flex:1;}
+.tb-ico{width:38px;height:38px;border:1px solid var(--border);background:#fff;border-radius:8px;color:var(--text-3);font-size:14px;}
+.tb-sort{height:38px;border:1px solid var(--border);background:#fff;border-radius:8px;color:var(--text-2);font-size:13px;padding:0 14px;}
+.addinv{position:relative;}
+.addinv-menu{display:none;position:absolute;top:44px;left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;min-width:170px;overflow:hidden;}
+.addinv-menu.show{display:block;}
+.addinv-menu div{padding:11px 14px;font-size:13px;color:var(--text-2);}
+.addinv-menu div:hover{background:var(--surface-2);}
+.inv-link{color:var(--blue);text-decoration:none;}
+.nil{color:var(--text-4);}
+.td-overdue{color:var(--red-text);}
+.kebab{color:var(--text-4);text-align:center;width:30px;}
+.btn{height:38px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-2);font-size:14px;font-weight:500;padding:0 16px;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn-primary:hover{background:var(--blue-press);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--card-shadow);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);}
+.tbl td{padding:14px 16px;border-bottom:1px solid var(--surface-1);font-size:13px;color:var(--text-2);}
+.tbl tr:last-child td{border-bottom:none;}
+.pill{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;display:inline-block;}
+.pill.draft{background:var(--amber-bg);color:var(--amber-text);}
+.pill.active{background:var(--info-bg);color:var(--blue-press);}
+.pill.new{background:var(--info-bg);color:var(--blue-press);}
+
+/* modal */
+.modal-scrim{position:fixed;inset:0;background:rgba(15,22,35,.45);display:none;align-items:stretch;justify-content:center;z-index:60;}
+.modal-scrim.show{display:flex;}
+.modal{background:var(--surface-2);width:100%;display:flex;flex-direction:column;}
+.modal-head{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;flex-shrink:0;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-sub{font-size:13px;color:var(--text-3);}
+.modal-tools{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tool-btn{height:32px;border:1px solid var(--border);background:#fff;border-radius:7px;padding:0 12px;font-size:12px;color:var(--text-2);}
+.modal-x{width:32px;height:32px;border:none;background:var(--surface-1);border-radius:7px;font-size:18px;color:var(--text-3);}
+.modal-body{flex:1;display:flex;overflow:hidden;}
+.work{flex:1;overflow-y:auto;padding:30px;}
+.work-col{max-width:680px;margin:0 auto;}
+
+/* command bar */
+.cmd{background:#fff;border:1.5px solid var(--blue);border-radius:12px;box-shadow:rgba(62,139,254,.12) 0 3px 14px;padding:18px 20px;}
+.cmd-lbl{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;}
+.cmd-input{width:100%;border:none;outline:none;font-size:16px;color:var(--ink);line-height:1.6;resize:none;min-height:30px;}
+.cmd-input::placeholder{color:var(--text-4);}
+.cmd-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
+.cmd-help{font-size:12px;color:var(--text-4);}
+.cmd-go{margin-left:auto;height:36px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 20px;font-size:13px;font-weight:600;}
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.ex-chip{font-size:12px;background:#fff;border:1px solid var(--border);color:var(--text-2);border-radius:18px;padding:6px 12px;}
+.ex-chip.link{border-style:dashed;color:var(--text-3);}
+
+/* parsed */
+.parsed-h{font-size:13px;color:var(--text-2);font-weight:600;margin:26px 0 12px;display:flex;align-items:center;gap:8px;}
+.parsed-h .dot{width:7px;height:7px;border-radius:50%;background:var(--blue);}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pcard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 15px;}
+.pcard.full{grid-column:span 2;}
+.pcard.flag{border-color:var(--blue);box-shadow:rgba(62,139,254,.1) 0 2px 8px;}
+.pc-lbl{font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.pc-val{font-size:14px;color:var(--ink);font-weight:500;}
+.pc-edit{margin-left:auto;font-size:11px;color:var(--blue);font-weight:500;cursor:pointer;}
+.tag{font-size:9px;font-weight:700;border-radius:3px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em;}
+.tag.confirm{background:var(--info-bg);color:var(--blue-press);}
+.tag.auto{background:var(--surface-1);color:var(--text-3);}
+.tag.ok{background:var(--green-bg);color:var(--green-text);}
+.mini{width:100%;border-collapse:collapse;}
+.mini td{font-size:12px;padding:5px 4px;border-bottom:1px solid var(--surface-1);color:var(--text-2);}
+
+/* banners */
+.banner{border-radius:9px;padding:12px 15px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.banner.warn{background:var(--amber-bg);color:var(--amber-text);}
+.banner.err{background:var(--red-bg);color:var(--red-text);}
+.banner.info{background:var(--info-bg);color:var(--blue-press);}
+.banner-actions{margin-left:auto;display:flex;gap:14px;flex-shrink:0;}
+.banner-actions a{color:inherit;font-weight:600;text-decoration:underline;cursor:pointer;}
+
+/* preview */
+.preview{width:380px;background:var(--surface-1);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.preview-head{height:44px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;}
+.preview-head .t{font-size:12px;font-weight:600;color:var(--text-2);}
+.preview-body{flex:1;overflow-y:auto;padding:18px;display:flex;justify-content:center;}
+.doc{width:100%;background:#fff;border-radius:6px;box-shadow:var(--card-shadow);padding:20px;display:flex;flex-direction:column;gap:13px;min-height:480px;}
+.doc-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.doc-logo{width:60px;height:22px;background:var(--surface-1);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-4);}
+.doc-title{font-size:16px;font-weight:700;color:var(--text-4);letter-spacing:.05em;}
+.doc-num{font-size:10px;color:var(--text-4);margin-top:2px;}
+.doc-div{height:1px;background:var(--surface-1);}
+.doc-lbl{font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.05em;}
+.doc-row{display:flex;justify-content:space-between;}
+.doc-hatch{height:84px;border:1px solid var(--surface-1);border-radius:6px;background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 5px,var(--surface-1) 5px,var(--surface-1) 10px);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-4);}
+.doc-tot{display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);}
+.doc-tot.g{font-weight:700;color:var(--ink);font-size:14px;}
+
+/* footer */
+.modal-foot{height:62px;background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;}
+.foot-note{font-size:12px;color:var(--text-3);margin-left:auto;}
+
+/* single-form fallback (Model A) */
+.block{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+.block-t{font-size:13px;font-weight:600;margin-bottom:12px;}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.field label{font-size:11px;font-weight:500;color:var(--text-2);}
+.inp{height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;color:var(--text-2);display:flex;align-items:center;background:#fff;}
+.inp.ph{color:var(--text-4);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{font-size:11px;background:var(--surface-1);border:1px solid var(--border);color:var(--text-3);border-radius:14px;padding:4px 10px;}
+.disc{border:1px solid var(--border);border-radius:10px;background:#fff;padding:13px 18px;display:flex;align-items:center;gap:10px;color:var(--text-2);font-size:13px;font-weight:600;margin-bottom:8px;}
+.disc .hint{margin-left:auto;font-size:11px;color:var(--text-4);font-weight:400;}
+
+/* success toast */
+.toast{position:fixed;top:62px;right:24px;background:var(--ink);color:#fff;border-radius:10px;padding:14px 18px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:80;display:none;max-width:340px;}
+.toast.show{display:block;}
+
+/* dialog */
+.dlg-scrim{position:fixed;inset:0;background:rgba(15,22,35,.5);display:none;align-items:center;justify-content:center;z-index:70;}
+.dlg-scrim.show{display:flex;}
+.dlg{background:#fff;border-radius:14px;padding:24px;width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.dlg-t{font-size:16px;font-weight:600;margin-bottom:8px;}
+.dlg-b{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:18px;}
+.dlg-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+/* harness */
+.harness{position:fixed;bottom:16px;left:16px;width:250px;background:#101826;border:2px dashed #4a5673;border-radius:12px;padding:12px;z-index:90;color:#cdd3e6;font-size:11px;max-height:80vh;overflow-y:auto;}
+.harness h4{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7f8aa8;margin-bottom:4px;}
+.harness .sub{font-size:10px;color:#647093;margin-bottom:10px;line-height:1.4;}
+.h-grp{margin-bottom:10px;}
+.h-grp .g{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#647093;margin:8px 0 4px;}
+.h-btn{display:flex;width:100%;text-align:left;background:#1b2536;border:1px solid #2c3850;color:#cdd3e6;border-radius:7px;padding:7px 9px;font-size:11px;margin-bottom:5px;align-items:center;gap:6px;}
+.h-btn:hover{background:#23304a;}
+.h-tag{margin-left:auto;font-size:8px;font-weight:700;border-radius:3px;padding:1px 5px;text-transform:uppercase;}
+.h-tag.v{background:#1f3a2a;color:#8fe3b0;}
+.h-tag.n{background:#3a2a1f;color:#f0c089;}
+.h-collapse{position:absolute;top:10px;right:10px;background:none;border:none;color:#647093;font-size:14px;}
+</style>
+</head>
+<body>
+
+<!-- ============ SHELL ============ -->
+<div class="topnav">
+  <div class="topnav-burger"><span></span><span></span><span></span></div>
+  <div class="topnav-logo"><div class="topnav-logo-mark">X</div> Xflow</div>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-ico">?</div>
+  <div class="topnav-ico">⚙</div>
+  <div class="topnav-ico">◔</div>
+</div>
+<div class="shell-body">
+  <div class="sidebar">
+    <div class="side-sec">Receive Payments <span class="chev">▾</span></div>
+    <div class="side-item"><span class="side-ico"></span> Home</div>
+    <div class="side-item"><span class="side-ico"></span> Receivables</div>
+    <div class="side-item active"><span class="side-ico"></span> Invoicing</div>
+    <div class="side-item"><span class="side-ico"></span> Payouts</div>
+    <div class="side-item"><span class="side-ico"></span> Balances</div>
+    <div class="side-item"><span class="side-ico"></span> Partners</div>
+    <div class="side-item" style="margin-top:6px;"><span class="side-ico"></span> Developers</div>
+    <div class="side-item"><span class="side-ico"></span> Features</div>
+    <div class="side-foot">
+      <div class="side-promo">
+        <div class="t">⇅ Multi-currency</div>
+        <div class="b">Enable multi-currency to receive funds in 25+ currencies.</div>
+      </div>
+      <div class="side-toggle"><span class="tg"></span><span class="tx"><b>Test Mode</b>Check out the Test mode guide</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-title">Invoices</div>
+    <div class="chip-row">
+      <span class="fchip active">Active <b>42</b></span>
+      <span class="fchip">Draft <b>93</b></span>
+      <span class="fchip">Due in 7 days <b>0</b></span>
+      <span class="fchip">Hold <b>0</b></span>
+      <span class="fchip">Input Required <b>0</b></span>
+      <span class="fchip">Overdue <b>40</b></span>
+    </div>
+    <div class="toolbar">
+      <div class="addinv">
+        <button class="btn btn-primary" onclick="toggleAdd()">Add Invoice&nbsp; ⇅</button>
+        <div class="addinv-menu" id="addmenu">
+          <div onclick="openModal()">Create Invoice</div>
+          <div onclick="toggleAdd()">Upload Invoice</div>
+        </div>
+      </div>
+      <div class="tb-spacer"></div>
+      <button class="tb-ico" title="Search">🔍</button>
+      <button class="tb-ico" title="Filter">≡</button>
+      <button class="tb-sort">↕ Sort: Invoice date (Newest-Oldest)</button>
+    </div>
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Invoice Date</th><th>Due Date</th><th>Invoice No.</th><th>Partner Name</th><th>Invoice Amount</th><th>Amount Pending</th><th>Status</th><th></th></tr></thead>
+        <tbody id="list-rows">
+          <tr><td>17 Jun 2026</td><td>17 Jun 2026</td><td><a class="inv-link">INV-XFL-260617-05969</a></td><td>XFLOW PAYMENTS INC.</td><td>USD 10.00</td><td class="nil">Nil</td><td><span class="pill draft">Draft</span></td><td class="kebab">⋮</td></tr>
+          <tr><td>15 Jun 2026</td><td>15 Jun 2026</td><td><a class="inv-link">INV-XFL-260615-99904</a></td><td>XFLOW PAYMENTS INC.</td><td class="nil">NA</td><td class="nil">Nil</td><td><span class="pill draft">Draft</span></td><td class="kebab">⋮</td></tr>
+          <tr><td>12 Jun 2026</td><td>12 Jun 2026</td><td><a class="inv-link">INV-RAH-260612-89499</a></td><td>Rahul</td><td>MXN 100.00</td><td class="nil">Nil</td><td><span class="pill draft">Draft</span></td><td class="kebab">⋮</td></tr>
+          <tr><td>18 May 2026</td><td>18 May 2026</td><td><a class="inv-link">INV-GOO-260518-43176</a></td><td>Google</td><td>CHF 10.00</td><td class="nil">Nil</td><td><span class="pill draft">Draft</span></td><td class="kebab">⋮</td></tr>
+          <tr><td>18 May 2026</td><td class="td-overdue">18 May 2026 ⚠</td><td><a class="inv-link">INV-GOO-260518-63255</a></td><td>Google</td><td>AED 200.00</td><td>AED 200.00</td><td><span class="pill active">Active</span></td><td class="kebab">⋮</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-scrim" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Create invoice</div>
+      <div class="modal-sub" id="modal-sub">Describe it — we'll structure the rest</div>
+      <div class="modal-tools">
+        <button class="tool-btn">Change template</button>
+        <button class="modal-x" onclick="closeModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="work">
+        <div class="work-col" id="work-col"><!-- injected --></div>
+      </div>
+      <div class="preview">
+        <div class="preview-head"><div class="t">Invoice preview</div></div>
+        <div class="preview-body">
+          <div class="doc" id="doc"><!-- injected --></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" id="modal-foot"><!-- injected --></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- dialog -->
+<div class="dlg-scrim" id="dlg">
+  <div class="dlg">
+    <div class="dlg-t" id="dlg-t"></div>
+    <div class="dlg-b" id="dlg-b"></div>
+    <div class="dlg-actions" id="dlg-a"></div>
+  </div>
+</div>
+
+<!-- ============ HARNESS ============ -->
+<div class="harness" id="harness">
+  <button class="h-collapse" onclick="toggleHarness()">–</button>
+  <h4>Prototype controls</h4>
+  <div style="font-size:10px;color:#647093;margin-bottom:10px;line-height:1.4;">Not part of the design. Jump to any state.</div>
+  <div class="h-grp" id="harness-body">
+    <div class="g">Happy path</div>
+    <button class="h-btn" onclick="openModal()">Open · empty command bar <span class="h-tag v">validated</span></button>
+    <button class="h-btn" onclick="state('parsed')">Parsed result <span class="h-tag v">validated</span></button>
+    <button class="h-btn" onclick="state('success')">Activated success <span class="h-tag v">validated</span></button>
+    <div class="g">Branches & edges</div>
+    <button class="h-btn" onclick="state('nomatch')">Partner not matched <span class="h-tag n">new surface</span></button>
+    <button class="h-btn" onclick="state('lowconf')">Low parse confidence <span class="h-tag n">new surface</span></button>
+    <button class="h-btn" onclick="state('fallback')">Blank-form fallback (A) <span class="h-tag v">validated</span></button>
+    <button class="h-btn" onclick="state('vban')">VBAN unavailable <span class="h-tag v">validated</span></button>
+    <button class="h-btn" onclick="state('saveerr')">Save error <span class="h-tag n">new surface</span></button>
+    <button class="h-btn" onclick="state('verify')">Partner verifying <span class="h-tag v">validated</span></button>
+  </div>
+</div>
+
+<script>
+/* ---------- live preview doc ---------- */
+function docHTML(partner, amount, num){
+  return `
+    <div class="doc-top">
+      <div class="doc-logo">LOGO</div>
+      <div style="text-align:right;"><div class="doc-title">INVOICE</div><div class="doc-num">${num||'INV-ACM-00042'}</div></div>
+    </div>
+    <div class="doc-div"></div>
+    <div class="doc-row"><div><div class="doc-lbl">From</div><div style="font-size:12px;color:var(--text-2);margin-top:3px;">Your Company</div></div>
+      <div style="text-align:right;"><div class="doc-lbl">Bill to</div><div style="font-size:12px;font-weight:500;color:var(--text-2);margin-top:3px;">${partner||'—'}</div></div></div>
+    <div class="doc-row"><div><div class="doc-lbl">Due</div><div style="font-size:12px;color:var(--text-2);margin-top:3px;">7 Aug 2026</div></div>
+      <div style="text-align:right;"><div class="doc-lbl">Amount due</div><div style="font-size:13px;font-weight:600;color:var(--ink);margin-top:3px;">${amount||'—'}</div></div></div>
+    <div class="doc-hatch">${partner?'Software development · '+ (amount||''):'Your invoice will appear here'}</div>
+    <div class="doc-div"></div>
+    <div class="doc-tot"><span>Subtotal</span><span>${amount||'—'}</span></div>
+    <div class="doc-tot g"><span>Total due</span><span>${amount||'—'}</span></div>
+  `;
+}
+function setDoc(partner,amount,num){ document.getElementById('doc').innerHTML = docHTML(partner,amount,num); }
+
+/* ---------- modal open/close ---------- */
+function toggleAdd(){ document.getElementById('addmenu').classList.toggle('show'); }
+function openModal(){ document.getElementById('addmenu').classList.remove('show'); document.getElementById('modal').classList.add('show'); state('empty'); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+/* ---------- footer variants ---------- */
+function foot(note, cta, enabled, onclick){
+  return `<button class="btn">Save as draft</button>
+    <div class="foot-note">${note}</div>
+    <button class="btn btn-primary" ${enabled?'':'disabled'} onclick="${onclick||''}">${cta}</button>`;
+}
+
+/* ---------- states ---------- */
+const W = ()=>document.getElementById('work-col');
+const F = ()=>document.getElementById('modal-foot');
+const SUB = (t)=>document.getElementById('modal-sub').textContent=t;
+
+function state(s){
+  if(!document.getElementById('modal').classList.contains('show') && s!=='success') openModal2();
+  switch(s){
+
+  case 'empty':
+    SUB("Describe it — we'll structure the rest");
+    W().innerHTML = `
+      <div class="cmd">
+        <div class="cmd-lbl">New invoice</div>
+        <textarea class="cmd-input" id="cmd" rows="1" placeholder='Describe the invoice — e.g. "Acme Corp $5,000 for software development, due Aug 7"'></textarea>
+        <div class="cmd-row"><div class="cmd-help">Type naturally. Add partner, amount, item and due date in any order.</div>
+          <button class="cmd-go" onclick="state('parsed')">Create</button></div>
+      </div>
+      <div class="examples">
+        <button class="ex-chip" onclick="fill('Acme Corp USD 5,000 for software development, due Aug 7')">Acme · USD 5,000 · software dev · net-30</button>
+        <button class="ex-chip" onclick="fill('Bill Globex 3 x design @ 800 USD')">Globex · 3 × design @ 800</button>
+        <button class="ex-chip link" onclick="state('fallback')">Start from a blank form</button>
+      </div>`;
+    setDoc('', '', 'INV-ACM-00042');
+    F().innerHTML = foot("", "Create", false);
+    setTimeout(()=>{var c=document.getElementById('cmd'); if(c) c.focus();},50);
+    break;
+
+  case 'parsed':
+    SUB("Here's your invoice — check the highlighted fields");
+    W().innerHTML = `
+      <div class="cmd" style="border-color:var(--border);box-shadow:none;">
+        <div class="cmd-lbl">Your description</div>
+        <div style="font-size:14px;color:var(--text-2);">"Acme Corp USD 5,000 for software development, due Aug 7"
+          <span class="pc-edit" onclick="state('empty')">Edit</span></div>
+      </div>
+      <div class="parsed-h"><span class="dot"></span> Here's your invoice — check the highlighted fields</div>
+      <div class="pgrid">
+        <div class="pcard flag"><div class="pc-lbl">Partner <span class="tag confirm">Confirm</span><span class="pc-edit">Edit</span></div><div class="pc-val">Acme Corp · USD</div></div>
+        <div class="pcard flag"><div class="pc-lbl">Due date <span class="tag confirm">Confirm</span><span class="pc-edit">Edit</span></div><div class="pc-val">7 Aug 2026</div></div>
+        <div class="pcard full"><div class="pc-lbl">Items <span class="pc-edit">Edit</span></div>
+          <table class="mini"><tr><td style="width:58%;">Software development</td><td style="text-align:center;">1</td><td style="text-align:right;">5,000.00</td><td style="text-align:right;font-weight:600;">USD 5,000.00</td></tr></table></div>
+        <div class="pcard"><div class="pc-lbl">Purpose code <span class="tag auto">Auto-filled</span><span class="pc-edit">Edit</span></div><div class="pc-val">P1006 · Software exports</div></div>
+        <div class="pcard"><div class="pc-lbl">Transaction type <span class="tag auto">Auto-filled</span><span class="pc-edit">Edit</span></div><div class="pc-val">Services</div></div>
+        <div class="pcard full"><div class="pc-lbl">How your partner can pay <span class="tag auto">Default</span><span class="pc-edit">Edit</span></div><div class="pc-val" style="font-size:13px;color:var(--text-2);">Bank transfer (VBAN) · Payment link on</div></div>
+      </div>`;
+    setDoc('Acme Corp','USD 5,000.00','INV-ACM-00042');
+    F().innerHTML = foot("2 auto-filled fields to confirm before activating", "Review & activate", true, "state('success')");
+    break;
+
+  case 'nomatch':
+    state('parsed');
+    SUB("Here's your invoice — check the highlighted fields");
+    W().insertAdjacentHTML('afterbegin',
+      `<div class="banner warn">We couldn't match a partner named "Acme Corpp". Pick one or add a new partner.
+        <div class="banner-actions"><a onclick="state('parsed')">Choose partner</a><a>Add partner</a></div></div>`);
+    F().innerHTML = foot("Select a partner to continue", "Review & activate", false);
+    break;
+
+  case 'lowconf':
+    SUB("Check the fields — some details were unclear");
+    W().innerHTML = `
+      <div class="banner info">We couldn't read all the details. Check the fields below, or start from a blank form.
+        <div class="banner-actions"><a onclick="state('fallback')">Blank form</a></div></div>
+      <div class="cmd" style="border-color:var(--border);box-shadow:none;">
+        <div class="cmd-lbl">Your description</div>
+        <div style="font-size:14px;color:var(--text-2);">"acme 5k sw dev aug"</div>
+      </div>
+      <div class="parsed-h"><span class="dot"></span> Partial — confirm everything below</div>
+      <div class="pgrid">
+        <div class="pcard flag"><div class="pc-lbl">Partner <span class="tag confirm">Confirm</span></div><div class="pc-val">Acme Corp · USD</div></div>
+        <div class="pcard flag"><div class="pc-lbl">Amount <span class="tag confirm">Confirm</span></div><div class="pc-val">USD 5,000.00</div></div>
+        <div class="pcard flag full"><div class="pc-lbl">Due date <span class="tag confirm">Confirm</span></div><div class="pc-val" style="color:var(--text-4);">Couldn't read — set a due date</div></div>
+      </div>`;
+    setDoc('Acme Corp','USD 5,000.00');
+    F().innerHTML = foot("3 fields to confirm before activating", "Review & activate", false);
+    break;
+
+  case 'fallback':
+    SUB("One page — fill what you need, we'll handle the rest");
+    W().innerHTML = `
+      <div class="banner info" style="margin-bottom:18px;">Blank form — the full single-page invoice. (Fallback from the command bar / default for new partners.)</div>
+      <div class="block"><div class="block-t">Client</div>
+        <div class="field"><label>Partner</label><div class="inp ph">Search partners</div><div style="font-size:11px;color:var(--text-4);margin-top:4px;">The customer you're billing. Sets the invoice currency.</div></div></div>
+      <div class="block"><div class="block-t">Items</div>
+        <table class="mini"><tr><td style="width:58%;color:var(--text-4);">Select or add item</td><td style="text-align:center;color:var(--text-4);">1</td><td style="text-align:right;color:var(--text-4);">0.00</td></tr></table>
+        <div style="font-size:12px;color:var(--blue);margin-top:8px;">+ Add item</div></div>
+      <div class="block"><div class="block-t">How your partner can pay</div>
+        <div class="chips"><span class="chip">Bank transfer (VBAN) ✓</span><span class="chip">Card payment +</span><span class="chip">Payment link on ✓</span></div></div>
+      <div class="disc"><span style="color:var(--text-4);">▸</span> More details <span class="hint">Invoice number, dates, purpose code and terms — already filled in</span></div>`;
+    setDoc('','');
+    F().innerHTML = foot("Add a partner and an item to continue", "Activate invoice", false);
+    break;
+
+  case 'vban':
+    state('parsed');
+    W().insertAdjacentHTML('afterbegin',
+      `<div class="banner warn">Bank transfer isn't available for this currency yet. Choose another payment method or currency to continue.
+        <div class="banner-actions"><a onclick="state('parsed')">Change payment</a></div></div>`);
+    F().innerHTML = foot("Resolve the payment method to continue", "Review & activate", false);
+    break;
+
+  case 'saveerr':
+    state('parsed');
+    W().insertAdjacentHTML('afterbegin',
+      `<div class="banner err">We couldn't save this invoice. Try again in a moment.
+        <div class="banner-actions"><a onclick="state('parsed')">Retry</a><a onclick="closeModal()">Exit without saving</a></div></div>`);
+    break;
+
+  case 'verify':
+    showDlg("Saved as draft — partner is being verified",
+      "We saved this invoice as a draft. We'll let you know when Acme Corp is verified so you can activate it.",
+      [["Close","ghost","hideDlg()"],["View invoice","primary","hideDlg();state('success')"]]);
+    break;
+
+  case 'success':
+    closeModal(); hideDlg();
+    var rows=document.getElementById('list-rows');
+    if(!document.getElementById('new-row')){
+      rows.insertAdjacentHTML('afterbegin',
+        '<tr id="new-row"><td>24 Jun 2026</td><td>24 Jul 2026</td><td><a class="inv-link">INV-ACM-260624-00042</a></td><td>Acme Corp</td><td>USD 5,000.00</td><td class="nil">USD 5,000.00</td><td><span class="pill new">Active</span></td><td class="kebab">⋮</td></tr>');
+    }
+    toast("Invoice INV-ACM-00042 activated for Acme Corp.");
+    break;
+  }
+}
+function openModal2(){ document.getElementById('modal').classList.add('show'); }
+function fill(t){ var c=document.getElementById('cmd'); if(c){c.value=t;c.focus();} }
+
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500); }
+function showDlg(t,b,actions){
+  document.getElementById('dlg-t').textContent=t; document.getElementById('dlg-b').textContent=b;
+  document.getElementById('dlg-a').innerHTML=actions.map(a=>`<button class="btn ${a[1]==='primary'?'btn-primary':''}" onclick="${a[2]}">${a[0]}</button>`).join('');
+  document.getElementById('dlg').classList.add('show');
+}
+function hideDlg(){ document.getElementById('dlg').classList.remove('show'); }
+function toggleHarness(){ var b=document.getElementById('harness-body'); var btn=event.target;
+  if(b.style.display==='none'){b.style.display='block';btn.textContent='–';} else {b.style.display='none';btn.textContent='+';} }
+</script>
+</body>
+</html>

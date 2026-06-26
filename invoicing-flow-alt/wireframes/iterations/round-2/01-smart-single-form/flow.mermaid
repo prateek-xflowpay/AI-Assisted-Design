@@ -1,0 +1,18 @@
+flowchart TD
+    A[Invoices list] -->|"+ New invoice"| B[Single-page invoice form opens]
+    B --> C{Saved template?}
+    C -->|No, first time| D[Inline template strip at top<br/>default pre-selected]
+    C -->|Yes| E[Form ready, template applied]
+    D --> E
+    E --> F[Pick Partner]
+    F -->|auto-save| G[Add line items]
+    G --> H[Payment defaults shown as chips<br/>VBAN + link pre-on]
+    H --> I{Need to change<br/>compliance / dates?}
+    I -->|No, defaults fine| K[Activate Invoice enabled]
+    I -->|Yes| J[Expand 'More details'<br/>edit purpose code / dates / TandC]
+    J --> K
+    K -->|Activate| L{Partner verified?}
+    L -->|Yes| M[Invoice activated -> detail page + success]
+    L -->|No / hold| N[Saved as Draft<br/>'partner being verified' notice]
+    H -.MCY currency no VBAN.-> O[Inline VBAN-unavailable banner<br/>blocks activate for that currency]
+    K -.API save error.-> P[Inline error banner<br/>retry / exit without saving]

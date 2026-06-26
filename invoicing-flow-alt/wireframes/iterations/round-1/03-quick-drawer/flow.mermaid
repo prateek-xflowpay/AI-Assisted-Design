@@ -1,0 +1,31 @@
+flowchart TD
+    A([Invoices list]) -->|Click 'Add Invoice ▾ > Create Invoice'| B{Template saved?}
+    B -->|First time| C[Compact template picker — inline in drawer header]
+    B -->|Returning| D[Right drawer slides in · list stays visible behind]
+    C -->|Confirm| D
+
+    D --> S1[Stepper: Step 1 — Client]
+    S1 -->|Partner selected| S1ok[Step 1 collapses to summary chip]
+    S1ok -->|Click Next| S2[Stepper: Step 2 — Items]
+
+    S2 -->|Items added| S2ok[Total updates · thumbnail preview refreshes]
+    S2ok -->|Click Next| S3[Stepper: Step 3 — Details]
+
+    S3 -->|Fields filled| S3ok[Invoice No. + dates + compliance done]
+    S3ok -->|Click Next| S4[Stepper: Step 4 — Payment]
+
+    S4 -->|Configure| S4ok[Bank transfer on · T&C optional]
+    S4ok --> I{Submit}
+
+    I -->|Save Draft| J([Invoice Draft · drawer closes · list row appears])
+    I -->|Activate Invoice| K{Partner status?}
+    K -->|Activated| L([Invoice Active · drawer closes · list row appears])
+    K -->|Verifying| M([Draft saved · dialog in drawer])
+
+    S1ok --> |Edit link| S1
+    S2ok --> |Edit link| S2
+
+    style A fill:#ADB5BD,color:#fff
+    style L fill:#6C757D,color:#fff
+    style M fill:#6C757D,color:#fff
+    style J fill:#6C757D,color:#fff

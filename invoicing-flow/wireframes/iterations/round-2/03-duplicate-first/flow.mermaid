@@ -1,0 +1,17 @@
+flowchart TD
+    A[Invoices list] -->|"+ New invoice"| B[Chooser opens:<br/>recent invoices + saved templates]
+    B --> C{Pick a source}
+    C -->|Recent invoice| D[Clone full invoice state]
+    C -->|Saved template| E[Apply template defaults]
+    C -->|"Start blank"| Z[Fallback: Model A single form]
+    D --> F[Pre-filled editor:<br/>partner + compliance + payment 'kept']
+    E --> F
+    F --> G[Edit the deltas:<br/>items / amount / dates]
+    G --> H{Change carried-over field?}
+    H -->|No| J[Activate enabled]
+    H -->|Yes| I[Tap 'kept' chip -> edit inline]
+    I --> J
+    J -->|Activate| K{Partner still verified?}
+    K -->|Yes| L[Activated -> detail + success]
+    K -->|No / hold| M[Saved as Draft notice]
+    F -.Source partner now invalid.-> N[Prompt: reselect partner before activate]

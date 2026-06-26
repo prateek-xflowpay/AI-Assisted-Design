@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iteration C — Quick-Create Drawer | Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; overflow: hidden; }
+
+  /* Shell */
+  .topnav { height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 24px; gap: 12px; position: relative; z-index: 20; }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+
+  .shell-body { display: flex; height: calc(100vh - 48px); position: relative; }
+
+  /* Sidebar */
+  .sidebar { width: 240px; background: #343A40; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; }
+  .sidebar-item { height: 40px; display: flex; align-items: center; padding: 0 20px; color: #ADB5BD; font-size: 14px; gap: 10px; }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 16px; height: 16px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+
+  /* Invoices list behind drawer (dimmed) */
+  .list-page { flex: 1; display: flex; flex-direction: column; background: #F8F9FA; position: relative; }
+  .list-dim { position: absolute; inset: 0; background: rgba(33,37,41,0.3); z-index: 5; }
+
+  .list-content { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .list-header { display: flex; align-items: center; }
+  .list-title { font-size: 20px; font-weight: 600; color: #212529; }
+  .list-toolbar { display: flex; gap: 8px; align-items: center; }
+  .tb-input { height: 36px; border: 1px solid #CED4DA; border-radius: 6px; padding: 0 12px; font-size: 14px; color: #ADB5BD; background: #fff; width: 200px; display: flex; align-items: center; }
+  .tb-btn { height: 36px; border: 1px solid #ADB5BD; border-radius: 6px; background: #fff; color: #6C757D; font-size: 13px; padding: 0 12px; cursor: pointer; }
+  .tb-cta { height: 36px; background: #6C757D; color: #fff; border: none; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer; margin-left: auto; opacity: 0.5; }
+
+  /* Status tabs (muted) */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #DEE2E6; }
+  .tab { padding: 8px 16px; font-size: 12px; color: #ADB5BD; cursor: pointer; }
+  .tab.active { color: #495057; border-bottom: 2px solid #495057; }
+
+  /* Table (muted) */
+  .table-header { display: grid; grid-template-columns: 120px 120px 1fr 140px 120px 120px 80px 40px; gap: 8px; padding: 8px 16px; background: #fff; border-bottom: 1px solid #DEE2E6; }
+  .th { font-size: 11px; font-weight: 500; color: #ADB5BD; text-transform: uppercase; }
+  .table-row { display: grid; grid-template-columns: 120px 120px 1fr 140px 120px 120px 80px 40px; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #F1F3F5; align-items: center; }
+  .td { font-size: 13px; color: #CED4DA; }
+  .td-badge { height: 20px; width: 50px; background: #E9ECEF; border-radius: 4px; }
+
+  /* ── RIGHT DRAWER ── */
+  .drawer {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 65%;
+    background: #fff; border-left: 1px solid #DEE2E6; z-index: 10;
+    display: flex; flex-direction: column;
+    box-shadow: rgba(0,0,0,0.2) -8px 0 32px;
+  }
+
+  .drawer-header {
+    height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0;
+  }
+  .drawer-title { font-size: 15px; font-weight: 600; color: #212529; }
+  .drawer-close { margin-left: auto; width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+
+  /* Progress stepper (linear, compact) */
+  .stepper {
+    display: flex; align-items: center; padding: 12px 20px; gap: 0;
+    border-bottom: 1px solid #DEE2E6; background: #F8F9FA; flex-shrink: 0;
+  }
+  .step-item { display: flex; align-items: center; gap: 6px; }
+  .step-circle {
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0;
+    border: 1.5px solid #ADB5BD; color: #ADB5BD; background: #fff;
+  }
+  .step-circle.done { background: #6C757D; border-color: #6C757D; color: #fff; }
+  .step-circle.active { background: #212529; border-color: #212529; color: #fff; }
+  .step-label { font-size: 12px; color: #ADB5BD; white-space: nowrap; }
+  .step-label.active { color: #212529; font-weight: 500; }
+  .step-label.done { color: #6C757D; }
+  .step-connector { flex: 1; height: 1px; background: #DEE2E6; margin: 0 8px; }
+  .step-connector.done { background: #6C757D; }
+
+  /* Drawer body: 2-col form */
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+  .section-label { font-size: 11px; font-weight: 600; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #F1F3F5; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 20px; }
+  .form-grid.one-col { grid-template-columns: 1fr; }
+  .form-grid.three-col { grid-template-columns: 2fr 1fr 1.5fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span2 { grid-column: span 2; }
+  .field-label { font-size: 11px; font-weight: 500; color: #495057; }
+  .field-label .req { color: #ADB5BD; }
+  .field-input { height: 36px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px; padding: 0 12px; font-size: 13px; color: #495057; display: flex; align-items: center; }
+  .field-input.placeholder { color: #ADB5BD; }
+  .field-input.select { cursor: pointer; }
+  .field-input.filled { background: #F8F9FA; }
+  .field-textarea { min-height: 60px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #ADB5BD; resize: none; font-family: inherit; }
+
+  /* Compact items table */
+  .items-mini { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  .items-mini th { font-size: 11px; font-weight: 500; color: #6C757D; text-align: left; padding: 5px 6px; border-bottom: 1px solid #DEE2E6; }
+  .items-mini td { font-size: 12px; padding: 7px 6px; border-bottom: 1px solid #F1F3F5; color: #495057; vertical-align: middle; }
+  .items-mini td input { height: 28px; border: 1px solid #DEE2E6; border-radius: 4px; padding: 0 6px; width: 100%; font-size: 12px; background: #F8F9FA; color: #495057; font-family: inherit; }
+  .items-mini td input.empty { color: #ADB5BD; background: #fff; }
+  .add-item-mini { height: 28px; border: 1px dashed #ADB5BD; border-radius: 4px; background: transparent; color: #6C757D; font-size: 12px; cursor: pointer; width: 100%; margin-bottom: 8px; font-family: inherit; }
+  .items-total-mini { display: flex; justify-content: flex-end; gap: 12px; font-size: 12px; padding-right: 4px; }
+  .items-total-mini .label { color: #6C757D; }
+  .items-total-mini .val { font-weight: 600; color: #212529; }
+
+  /* Compliance callout */
+  .compliance-notice { background: #F8F9FA; border-left: 3px solid #ADB5BD; padding: 8px 12px; border-radius: 0 4px 4px 0; font-size: 11px; color: #6C757D; line-height: 1.6; margin-bottom: 16px; }
+
+  /* Toggle rows */
+  .toggle-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .toggle-track { width: 34px; height: 18px; background: #ADB5BD; border-radius: 9px; flex-shrink: 0; position: relative; }
+  .toggle-track.on { background: #6C757D; }
+  .toggle-thumb { position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 2px; left: 2px; }
+  .toggle-track.on .toggle-thumb { left: 18px; }
+  .toggle-label { font-size: 12px; color: #495057; }
+
+  /* Thumbnail preview strip at bottom of drawer */
+  .preview-strip {
+    height: 140px; background: #E9ECEF; border-top: 1px solid #DEE2E6;
+    display: flex; align-items: flex-start; padding: 12px 16px; gap: 16px; flex-shrink: 0;
+  }
+  .preview-thumb {
+    width: 88px; height: 116px; background: #fff; border-radius: 3px;
+    box-shadow: rgba(68,78,94,0.15) 0 2px 6px; flex-shrink: 0;
+    display: flex; flex-direction: column; padding: 8px; gap: 6px;
+  }
+  .thumb-line { height: 6px; background: #E9ECEF; border-radius: 1px; }
+  .thumb-line.dark { background: #CED4DA; }
+  .thumb-hatch { flex: 1; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 2px, #E9ECEF 2px, #E9ECEF 4px); border-radius: 2px; }
+  .preview-info { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
+  .preview-info-label { font-size: 11px; font-weight: 600; color: #6C757D; }
+  .preview-info-text { font-size: 11px; color: #ADB5BD; line-height: 1.5; }
+  .preview-expand-btn { height: 24px; border: 1px solid #ADB5BD; border-radius: 4px; background: #fff; color: #6C757D; font-size: 11px; padding: 0 8px; cursor: pointer; font-family: inherit; margin-top: 4px; align-self: flex-start; }
+
+  /* Drawer footer */
+  .drawer-footer {
+    height: 56px; background: #fff; border-top: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0;
+  }
+  .btn-primary { height: 36px; background: #495057; color: #fff; border: none; border-radius: 6px; padding: 0 18px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn-secondary { height: 36px; background: transparent; color: #6C757D; border: 1px solid #ADB5BD; border-radius: 6px; padding: 0 14px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn-ghost { height: 36px; background: transparent; color: #ADB5BD; border: none; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .autosave-note { font-size: 11px; color: #ADB5BD; margin-left: auto; }
+
+  /* Annotation */
+  .annotation-bar { background: #495057; color: #fff; font-size: 11px; padding: 6px 16px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="topnav-logo"></div>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-badge"></div>
+  <div class="topnav-avatar"></div>
+</div>
+
+<div class="shell-body">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+    <div class="sidebar-section">Receive Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+    <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+    <div class="sidebar-section">Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+  </div>
+
+  <!-- List page behind drawer (dimmed) -->
+  <div class="list-page">
+    <div class="list-dim"></div>
+    <div class="list-content">
+      <div class="list-header">
+        <div class="list-title">Invoices</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">Active <span style="color:#ADB5BD; margin-left:4px;">12</span></div>
+        <div class="tab">Draft <span style="color:#ADB5BD; margin-left:4px;">3</span></div>
+        <div class="tab">Due in 7 days</div>
+        <div class="tab">Overdue</div>
+      </div>
+      <div class="list-toolbar">
+        <div class="tb-input">Search Invoice</div>
+        <button class="tb-btn">Sort</button>
+        <button class="tb-btn">Filter</button>
+        <button class="tb-cta">Add Invoice ▾</button>
+      </div>
+      <div style="background:#fff; border-radius:6px; border:1px solid #DEE2E6; overflow:hidden;">
+        <div class="table-header">
+          <div class="th">Invoice Date</div><div class="th">Due Date</div><div class="th">Invoice No.</div>
+          <div class="th">Partner</div><div class="th">Amount</div><div class="th">Pending</div>
+          <div class="th">Status</div><div class="th"></div>
+        </div>
+        <div class="table-row"><div class="td">22 Jun 24</div><div class="td">30 Jun 24</div><div class="td" style="color:#DEE2E6;">INV-ABC…</div><div class="td">Acme…</div><div class="td">USD 5k</div><div class="td">USD 5k</div><div><div class="td-badge"></div></div><div class="td">⋮</div></div>
+        <div class="table-row"><div class="td">18 Jun 24</div><div class="td">25 Jun 24</div><div class="td" style="color:#DEE2E6;">INV-XYZ…</div><div class="td">Beta…</div><div class="td">USD 2k</div><div class="td">USD 2k</div><div><div class="td-badge"></div></div><div class="td">⋮</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT DRAWER -->
+  <div class="drawer">
+
+    <div class="annotation-bar">
+      <strong>Model C — Quick-create right drawer:</strong> A 65%-width right drawer slides in over the list (list stays visible, dimmed). Compact 2-col grid form. Progress stepper replaces tabs. Thumbnail preview at the bottom (expandable). No full-screen takeover.
+    </div>
+
+    <div class="drawer-header">
+      <div class="drawer-title">Create Invoice</div>
+      <div class="drawer-close">×</div>
+    </div>
+
+    <!-- Progress stepper -->
+    <div class="stepper">
+      <div class="step-item">
+        <div class="step-circle done">✓</div>
+        <div class="step-label done">Client</div>
+      </div>
+      <div class="step-connector done"></div>
+      <div class="step-item">
+        <div class="step-circle active">2</div>
+        <div class="step-label active">Items</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-circle">3</div>
+        <div class="step-label">Details</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-circle">4</div>
+        <div class="step-label">Payment</div>
+      </div>
+    </div>
+
+    <!-- Drawer body: Step 2 — Items (current step shown) -->
+    <div class="drawer-body">
+
+      <!-- Step 1 summary (done, collapsed) -->
+      <div style="background:#F8F9FA; border:1px solid #DEE2E6; border-radius:6px; padding:10px 14px; margin-bottom:16px; display:flex; align-items:center; gap:10px;">
+        <div style="font-size:12px; color:#6C757D; font-weight:500;">Client</div>
+        <div style="font-size:12px; color:#495057; margin-left:4px;">Acme Corp · USD</div>
+        <div style="margin-left:auto; font-size:11px; color:#ADB5BD; cursor:pointer; text-decoration:underline;">Edit</div>
+      </div>
+
+      <!-- Step 2: Items (active) -->
+      <div class="section-label">Invoice Items</div>
+
+      <table class="items-mini">
+        <thead>
+          <tr>
+            <th style="width:40%;">Item</th>
+            <th style="width:12%;">Qty</th>
+            <th style="width:22%;">Unit Price</th>
+            <th style="width:18%;">Total</th>
+            <th style="width:8%;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input value="Software Development" readonly></td>
+            <td><input value="1" style="text-align:right;" readonly></td>
+            <td><input value="5,000.00" style="text-align:right;" readonly></td>
+            <td style="font-size:12px; font-weight:600; text-align:right;">5,000.00</td>
+            <td style="text-align:right; color:#ADB5BD; cursor:pointer;">×</td>
+          </tr>
+          <tr>
+            <td><input class="empty" placeholder="Select or add item..." readonly></td>
+            <td><input class="empty" placeholder="1" style="text-align:right;" readonly></td>
+            <td><input class="empty" placeholder="0.00" style="text-align:right;" readonly></td>
+            <td style="text-align:right; color:#ADB5BD;">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="add-item-mini">+ Add item</button>
+      <div class="items-total-mini" style="margin-bottom:20px;">
+        <span class="label">Total</span>
+        <span class="val">USD 5,000.00</span>
+      </div>
+
+      <!-- Step 3: Details (partially revealed for context — grayed) -->
+      <div style="border-top: 1px solid #F1F3F5; padding-top: 16px; opacity: 0.45; pointer-events: none;">
+        <div class="section-label">Invoice Details + Compliance</div>
+        <div class="form-grid">
+          <div class="field">
+            <div class="field-label">Invoice Number</div>
+            <div class="field-input placeholder">Auto-generated</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Currency</div>
+            <div class="field-input placeholder">USD ▾</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Invoice Date</div>
+            <div class="field-input placeholder">DD/MM/YYYY</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Due Date</div>
+            <div class="field-input placeholder">DD/MM/YYYY</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Transaction Type</div>
+            <div class="field-input placeholder">Select ▾</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Purpose Code</div>
+            <div class="field-input placeholder">Select ▾</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /drawer-body -->
+
+    <!-- Thumbnail preview strip -->
+    <div class="preview-strip">
+      <div class="preview-thumb">
+        <div class="thumb-line dark" style="width:70%;"></div>
+        <div class="thumb-line" style="width:50%;"></div>
+        <div style="height:1px; background:#E9ECEF; margin:2px 0;"></div>
+        <div class="thumb-line" style="width:90%;"></div>
+        <div class="thumb-line" style="width:60%;"></div>
+        <div class="thumb-hatch"></div>
+        <div class="thumb-line dark" style="width:70%; margin-left:auto;"></div>
+      </div>
+      <div class="preview-info">
+        <div class="preview-info-label">Invoice Preview</div>
+        <div class="preview-info-text">Updates as you fill in<br>fields. Expand to see<br>the full document.</div>
+        <button class="preview-expand-btn">Expand preview</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="drawer-footer">
+      <button class="btn-ghost">← Back</button>
+      <div class="autosave-note">Saving…</div>
+      <button class="btn-secondary" style="margin-left:auto;">Save Draft</button>
+      <button class="btn-primary">Next: Details →</button>
+    </div>
+
+  </div><!-- /drawer -->
+
+</div><!-- /shell-body -->
+
+</body>
+</html>

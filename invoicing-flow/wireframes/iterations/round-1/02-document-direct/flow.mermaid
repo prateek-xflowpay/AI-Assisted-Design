@@ -1,0 +1,30 @@
+flowchart TD
+    A([Invoices list]) -->|Click 'Create Invoice'| B{Template saved?}
+    B -->|First time| C[Theme modal — pick template]
+    B -->|Returning| D[Invoice document opens on dark stage]
+    C -->|Start| D
+
+    D --> E[Invoice shown with empty regions]
+    E -->|Click any region| F[Floating edit panel anchors to region]
+
+    F -->|Edit Client region| F1[Partner selector — panel updates 'Bill To' live]
+    F -->|Edit Items region| F2[Item editor — rows update in doc live]
+    F -->|Edit Details region| F3[Date + invoice number + compliance fields]
+    F -->|Edit Payment region| F4[Payment toggles + T&C]
+
+    F1 -->|Done| G[Region marked complete in toolbar]
+    F2 -->|Done| G
+    F3 -->|Done| G
+    F4 -->|Done| G
+
+    G -->|Continue editing other regions| F
+    G -->|All 4 complete| H{Ready?}
+    H -->|Save Draft| I([Invoice saved as Draft])
+    H -->|Activate Invoice| J{Partner status?}
+    J -->|Activated| K([Invoice Active · navigate to detail])
+    J -->|Verifying| L([Draft saved · dialog shown])
+
+    style A fill:#ADB5BD,color:#fff
+    style K fill:#6C757D,color:#fff
+    style L fill:#6C757D,color:#fff
+    style I fill:#6C757D,color:#fff

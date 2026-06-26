@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Balances — 03 Segmented + more (lo-fi)</title>
+<style>
+  :root{
+    --ink:#2f2f37; --ink2:#6b6b76; --ink3:#9a9aa4;
+    --line:#c7c7d0; --line2:#dcdce3;
+    --fill:#f3f3f6; --fill2:#e7e7ee; --sel:#d9d9e2;
+    --chrome:#e9e9ef; --dark:#3a3a44;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial, Helvetica, sans-serif;color:var(--ink);background:#fff;}
+  .app{display:flex;width:1728px;min-height:847px;}
+  .topbar{position:absolute;left:228px;right:0;top:0;height:48px;background:var(--dark);}
+  .sidebar{width:228px;flex:0 0 228px;background:var(--chrome);border-right:1px solid var(--line);padding:18px 16px;}
+  .logo{height:22px;width:90px;background:var(--ink3);border-radius:3px;margin-bottom:24px;opacity:.5}
+  .navgrp{font-size:11px;letter-spacing:.04em;color:var(--ink2);text-transform:uppercase;margin:10px 0 8px}
+  .navitem{height:30px;border-radius:6px;background:var(--fill);margin-bottom:6px;display:flex;align-items:center;padding:0 10px;font-size:13px;color:var(--ink2)}
+  .navitem.active{background:var(--sel);color:var(--ink);font-weight:bold}
+  .content{flex:1;padding:64px 40px 40px;}
+  .h1{font-size:22px;font-weight:bold;margin:0 0 4px}
+  .crumb{font-size:12px;color:var(--ink3);margin-bottom:20px}
+  .card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:20px 22px;margin-bottom:14px;}
+  .lbl{font-size:12px;color:var(--ink2);margin-bottom:6px}
+  .amt{font-size:24px;font-weight:bold;letter-spacing:-.01em}
+  .row{display:flex;align-items:center;}
+  .btn{border:1px solid var(--line);border-radius:7px;height:36px;padding:0 16px;display:inline-flex;align-items:center;font-size:13px;color:var(--ink2);background:var(--fill);}
+  .btn.solid{background:var(--sel);color:var(--ink)}
+  .icon{width:36px;height:36px;border-radius:7px;background:var(--fill2);flex:0 0 36px;margin-right:14px}
+  .kebab{width:22px;height:22px;border-radius:5px;background:var(--fill2)}
+  .link{color:var(--ink);text-decoration:underline;font-size:13px}
+  .tag{display:inline-block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border:1px solid var(--line);border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:middle}
+  .secrow{display:flex;gap:14px}
+  .secrow .card{flex:1;margin-bottom:0}
+  .ph{height:12px;border-radius:4px;background:var(--fill2);margin-top:8px}
+  .freed{margin:14px 0 22px;border:1px dashed #9cc88a;background:#f3faf0;border-radius:8px;padding:8px 12px;font-size:12px;color:#4d7a3a}
+  /* ---- segmented control + more ---- */
+  .segRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .segLbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-right:4px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+  .segItem{padding:9px 16px;border-right:1px solid var(--line2);text-align:left}
+  .segItem:last-child{border-right:none}
+  .segItem.sel{background:var(--sel)}
+  .segItem .c{font-weight:bold;font-size:13px}
+  .segItem .b{font-size:11px;color:var(--ink2)}
+  .more{position:relative}
+  .moreBtn{height:42px;border:1px dashed var(--ink3);border-radius:9px;background:var(--fill);display:flex;align-items:center;gap:8px;padding:0 14px;font-size:13px;color:var(--ink2)}
+  .caret{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--ink2)}
+  .panel{position:absolute;top:50px;left:0;width:300px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.10);padding:8px;z-index:5}
+  .search{height:32px;border:1px solid var(--line);border-radius:7px;background:var(--fill);margin-bottom:8px;display:flex;align-items:center;padding:0 10px;font-size:12px;color:var(--ink3)}
+  .opt{display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:6px;font-size:13px}
+  .flag{width:18px;height:18px;border-radius:50%;background:var(--fill2);flex:0 0 18px}
+  .opt .n{color:var(--ink3);font-size:11px;margin-left:auto}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"></div>
+    <div class="navgrp">Receive Payments</div>
+    <div class="navitem">Home</div>
+    <div class="navitem">Receivables</div>
+    <div class="navitem">Invoicing</div>
+    <div class="navitem">Payouts</div>
+    <div class="navitem active">Balances</div>
+    <div class="navitem">Partners</div>
+  </aside>
+
+  <main class="content">
+    <div class="h1">Balances <span class="tag">lo-fi · 03 segmented + more</span></div>
+    <div class="crumb">Connected User · model: two-tier (funded vs long-tail)</div>
+
+    <!-- funded/preferred currencies as a segmented control; long tail tucked into a dropdown -->
+    <div class="segRow">
+      <span class="segLbl">Funded</span>
+      <div class="seg">
+        <div class="segItem sel"><div class="c">USD</div><div class="b">346,145.09</div></div>
+        <div class="segItem"><div class="c">AED</div><div class="b">470,999.00</div></div>
+        <div class="segItem"><div class="c">AUD</div><div class="b">298,753.00</div></div>
+      </div>
+      <div class="more">
+        <div class="moreBtn">More currencies (22 · all 0.00) <span class="caret"></span></div>
+        <!-- open state -->
+        <div class="panel">
+          <div class="search">Search 22 currencies…</div>
+          <div class="opt"><span class="flag"></span><b>CAD</b> 0.00 <span class="n">Canadian $</span></div>
+          <div class="opt"><span class="flag"></span><b>CHF</b> 0.00 <span class="n">Swiss Franc</span></div>
+          <div class="opt"><span class="flag"></span><b>CNY</b> 0.00 <span class="n">Yuan</span></div>
+          <div class="opt"><span class="flag"></span><b>EUR</b> 0.00 <span class="n">Euro</span></div>
+          <div class="opt"><span class="flag"></span><b>GBP</b> 0.00 <span class="n">Pound</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="freed">↔ Reclaimed width — only funded currencies stay on screen; the 22 zero-balance currencies move into a dropdown, freeing the full column for cards.</div>
+
+    <div class="card">
+      <div class="row"><span class="icon"></span>
+        <div><div class="lbl">Receiving Account Balance</div><div class="amt">USD 81,218.00</div></div>
+        <div style="margin-left:auto" class="kebab"></div>
+      </div>
+      <div class="row" style="margin-top:16px;gap:12px">
+        <span class="btn">Bank Transfer Instructions</span>
+        <span class="btn solid">Withdraw</span>
+      </div>
+    </div>
+
+    <div class="secrow">
+      <div class="card">
+        <div class="row"><span class="icon"></span>
+          <div><div class="lbl">Total Partner Balance</div><div class="amt">USD 264,917.09</div></div>
+          <a class="link" style="margin-left:auto">View Partner List</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row"><span class="icon"></span>
+          <div><div class="lbl">Processing Balance</div><div class="amt">USD 10.00</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="lbl">Recent activity in USD &nbsp;<span style="color:var(--ink3)">(freed width supports more detail)</span></div>
+      <div class="ph" style="width:96%"></div><div class="ph" style="width:88%"></div><div class="ph" style="width:92%"></div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

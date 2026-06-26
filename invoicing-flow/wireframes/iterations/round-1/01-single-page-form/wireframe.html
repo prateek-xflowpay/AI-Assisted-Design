@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iteration A — Single-Page Form | Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; }
+
+  /* ── Shell ── */
+  .shell { display: flex; flex-direction: column; height: 100vh; }
+  .topnav {
+    height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA;
+    display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0;
+  }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+
+  .body { display: flex; flex: 1; overflow: hidden; }
+  .sidebar {
+    width: 240px; background: #343A40; flex-shrink: 0;
+    display: flex; flex-direction: column; padding: 16px 0;
+  }
+  .sidebar-item {
+    height: 40px; display: flex; align-items: center; padding: 0 20px;
+    color: #ADB5BD; font-size: 14px; cursor: pointer; gap: 10px;
+  }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 16px; height: 16px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Overlay (full-screen modal) ── */
+  .overlay {
+    position: absolute; top: 48px; left: 240px; right: 0; bottom: 0;
+    background: #F8F9FA; display: flex; flex-direction: column; z-index: 10;
+  }
+  .overlay-header {
+    height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0;
+  }
+  .overlay-title { font-size: 16px; font-weight: 600; color: #212529; }
+  .overlay-subtitle { font-size: 13px; color: #6C757D; }
+  .overlay-close { margin-left: auto; width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+
+  .overlay-body { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── Left: Form ── */
+  .form-panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  .form-section {
+    background: #fff; border-radius: 6px; border: 1px solid #DEE2E6;
+    box-shadow: rgba(68,78,94,0.08) 0px 1px 3px 0px;
+  }
+  .form-section-header {
+    height: 44px; display: flex; align-items: center; padding: 0 20px;
+    border-bottom: 1px solid #DEE2E6; gap: 10px;
+  }
+  .section-number {
+    width: 22px; height: 22px; border-radius: 50%; background: #495057;
+    color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+  }
+  .section-number.done { background: #ADB5BD; }
+  .section-title { font-size: 13px; font-weight: 600; color: #212529; }
+  .section-status { margin-left: auto; font-size: 11px; color: #ADB5BD; }
+  .form-section-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  .field-row { display: flex; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .field-label { font-size: 12px; font-weight: 500; color: #495057; }
+  .field-label .req { color: #ADB5BD; margin-left: 2px; }
+  .field-input {
+    height: 36px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px;
+    padding: 0 12px; font-size: 14px; color: #212529; display: flex; align-items: center;
+  }
+  .field-input.placeholder { color: #ADB5BD; }
+  .field-input.filled { color: #495057; background: #F8F9FA; }
+  .field-input.select::after { content: "▾"; margin-left: auto; color: #ADB5BD; font-size: 12px; }
+  .field-input.select { cursor: pointer; }
+  .field-textarea {
+    min-height: 72px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px;
+    padding: 10px 12px; font-size: 14px; color: #ADB5BD; resize: none;
+    font-family: inherit;
+  }
+
+  /* Line items */
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th { font-size: 11px; font-weight: 500; color: #6C757D; text-align: left; padding: 6px 8px; border-bottom: 1px solid #DEE2E6; }
+  .items-table td { padding: 8px; border-bottom: 1px solid #F1F3F5; vertical-align: middle; }
+  .items-table .col-desc { width: 40%; }
+  .items-table .col-qty { width: 12%; }
+  .items-table .col-price { width: 20%; }
+  .items-table .col-total { width: 18%; }
+  .items-table .col-del { width: 10%; text-align: right; }
+  .item-input { height: 32px; border: 1px solid #DEE2E6; border-radius: 4px; padding: 0 8px; width: 100%; font-size: 13px; background: #F8F9FA; color: #495057; }
+  .item-input.empty { color: #ADB5BD; }
+  .items-total { display: flex; justify-content: flex-end; padding: 12px 8px 0; gap: 16px; font-size: 13px; }
+  .items-total-label { color: #6C757D; }
+  .items-total-val { font-weight: 600; color: #212529; min-width: 80px; text-align: right; }
+  .add-item-btn {
+    height: 32px; border: 1px dashed #ADB5BD; border-radius: 6px; background: transparent;
+    color: #6C757D; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px;
+  }
+  .del-btn { font-size: 16px; color: #ADB5BD; cursor: pointer; padding: 4px; }
+
+  /* Toggles */
+  .toggle-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .toggle-track { width: 36px; height: 20px; background: #ADB5BD; border-radius: 10px; flex-shrink: 0; position: relative; }
+  .toggle-track.on { background: #6C757D; }
+  .toggle-thumb { position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; }
+  .toggle-track.on .toggle-thumb { left: 18px; }
+  .toggle-label { font-size: 13px; color: #495057; }
+
+  /* Form footer */
+  .form-footer {
+    height: 60px; background: #fff; border-top: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0;
+  }
+  .btn-primary {
+    height: 36px; background: #495057; color: #fff; border: none; border-radius: 6px;
+    padding: 0 20px; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  .btn-secondary {
+    height: 36px; background: transparent; color: #6C757D; border: 1px solid #ADB5BD; border-radius: 6px;
+    padding: 0 16px; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  .btn-ghost { height: 36px; background: transparent; color: #ADB5BD; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .footer-autosave { font-size: 12px; color: #ADB5BD; margin-left: auto; }
+
+  /* ── Right: Preview Panel ── */
+  .preview-panel {
+    width: 420px; background: #E9ECEF; border-left: 1px solid #DEE2E6;
+    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  }
+  .preview-header {
+    height: 44px; background: #DEE2E6; border-bottom: 1px solid #CED4DA;
+    display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  }
+  .preview-header-title { font-size: 12px; font-weight: 600; color: #495057; }
+  .preview-actions { display: flex; gap: 8px; margin-left: auto; }
+  .preview-action-btn { height: 28px; border: 1px solid #ADB5BD; border-radius: 4px; background: #fff; color: #6C757D; font-size: 11px; padding: 0 10px; cursor: pointer; }
+
+  .preview-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; justify-content: center; }
+  .invoice-doc {
+    width: 100%; background: #fff; border-radius: 4px;
+    box-shadow: rgba(68,78,94,0.15) 0px 2px 8px;
+    padding: 24px; display: flex; flex-direction: column; gap: 16px; min-height: 480px;
+  }
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .doc-logo { width: 80px; height: 28px; background: #E9ECEF; border-radius: 3px; }
+  .doc-title-block { text-align: right; }
+  .doc-title-label { font-size: 18px; font-weight: 700; color: #ADB5BD; }
+  .doc-num { font-size: 11px; color: #ADB5BD; margin-top: 4px; }
+  .doc-divider { height: 1px; background: #E9ECEF; }
+  .doc-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .doc-meta-block { display: flex; flex-direction: column; gap: 4px; }
+  .doc-meta-label { font-size: 10px; font-weight: 600; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.05em; }
+  .doc-meta-value { height: 12px; background: #E9ECEF; border-radius: 2px; }
+  .doc-meta-value.wide { width: 80%; }
+  .doc-meta-value.narrow { width: 50%; }
+  .doc-items-hatch {
+    height: 120px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px);
+    border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center;
+  }
+  .doc-items-label { font-size: 12px; color: #ADB5BD; }
+  .doc-total-block { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .doc-total-row { display: flex; gap: 24px; font-size: 12px; color: #ADB5BD; }
+  .doc-total-row.grand { color: #495057; font-weight: 600; font-size: 14px; }
+  .doc-footer-hatch {
+    height: 60px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px);
+    border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Annotation callout */
+  .annotation {
+    background: #495057; color: #fff; font-size: 11px; border-radius: 4px;
+    padding: 6px 10px; display: inline-block; margin: 0 0 8px 0; line-height: 1.4;
+  }
+  .annotation-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+  .annotation-line { width: 24px; height: 1px; background: #ADB5BD; margin-top: 10px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top nav -->
+  <div class="topnav">
+    <div class="topnav-logo"></div>
+    <div class="topnav-spacer"></div>
+    <div class="topnav-badge"></div>
+    <div class="topnav-avatar"></div>
+  </div>
+
+  <div class="body" style="position: relative;">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+      <div class="sidebar-section">Receive Payments</div>
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+      <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+      <div class="sidebar-section">Payments</div>
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+      <div class="sidebar-section">Account</div>
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+      <div class="sidebar-item"><div class="sidebar-icon"></div> Developers</div>
+    </div>
+
+    <!-- Main behind overlay (greyed) -->
+    <div class="main" style="opacity: 0.25; pointer-events: none; padding: 24px; background: #F8F9FA;">
+      <div style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Invoices</div>
+    </div>
+
+    <!-- FULL-SCREEN OVERLAY -->
+    <div class="overlay">
+
+      <div class="overlay-header">
+        <div class="overlay-title">Create Invoice</div>
+        <div class="overlay-subtitle">All fields on one page — scroll to complete</div>
+        <div class="overlay-close">×</div>
+      </div>
+
+      <div class="overlay-body">
+
+        <!-- ── LEFT: Single-page form ── -->
+        <div class="form-panel">
+
+          <!-- Annotation: key difference from current -->
+          <div style="background: #E9ECEF; border-left: 3px solid #6C757D; padding: 10px 14px; border-radius: 0 4px 4px 0; font-size: 12px; color: #495057; line-height: 1.6;">
+            <strong>Model A — Single-page form:</strong> All 4 steps collapsed into one scrollable page. No step navigation, no Back/Next. Section headers act as anchors. User fills in order, submits at bottom.
+          </div>
+
+          <!-- Section 1: Client -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-number">1</div>
+              <div class="section-title">Client</div>
+            </div>
+            <div class="form-section-body">
+              <div class="field">
+                <div class="field-label">Select Partner <span class="req">*</span></div>
+                <div class="field-input select filled">Acme Corp <span style="margin-left:auto; color:#ADB5BD; font-size:12px;">▾</span></div>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #6C757D; margin-top: 5px; flex-shrink: 0;"></div>
+                <div style="font-size: 12px; color: #6C757D;">Acme Corp · USD · acme@example.com — <span style="color: #ADB5BD; text-decoration: underline; cursor: pointer;">Change partner</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Line Items -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-number">2</div>
+              <div class="section-title">Invoice Items</div>
+              <div class="section-status">USD · 2 items</div>
+            </div>
+            <div class="form-section-body">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th class="col-desc">Item / Description</th>
+                    <th class="col-qty">Qty</th>
+                    <th class="col-price">Unit Price</th>
+                    <th class="col-total">Total</th>
+                    <th class="col-del"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input class="item-input" value="Software Development Services" readonly></td>
+                    <td><input class="item-input" value="1" readonly style="width:100%; text-align:right;"></td>
+                    <td><input class="item-input" value="5,000.00" readonly style="width:100%; text-align:right;"></td>
+                    <td style="font-size:13px; font-weight:600; color:#495057; text-align:right;">5,000.00</td>
+                    <td class="col-del"><span class="del-btn">×</span></td>
+                  </tr>
+                  <tr>
+                    <td><input class="item-input empty" placeholder="Select or add an item..." readonly></td>
+                    <td><input class="item-input empty" placeholder="1" readonly style="width:100%; text-align:right;"></td>
+                    <td><input class="item-input empty" placeholder="0.00" readonly style="width:100%; text-align:right;"></td>
+                    <td style="font-size:13px; color:#ADB5BD; text-align:right;">—</td>
+                    <td class="col-del"><span class="del-btn" style="color:#DEE2E6;">×</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="add-item-btn">+ Add another item</div>
+              <div class="items-total">
+                <span class="items-total-label">Total</span>
+                <span class="items-total-val">USD 5,000.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Invoice Details + Compliance combined -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-number">3</div>
+              <div class="section-title">Invoice Details</div>
+            </div>
+            <div class="form-section-body">
+              <div class="field-row">
+                <div class="field">
+                  <div class="field-label">Invoice Number <span class="req">*</span></div>
+                  <div class="field-input filled">INV-ACM-240624-00001</div>
+                </div>
+                <div class="field">
+                  <div class="field-label">Currency <span class="req">*</span></div>
+                  <div class="field-input select filled">USD – US Dollar <span style="margin-left:auto;color:#ADB5BD;font-size:12px;">▾</span></div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <div class="field-label">Invoice Date <span class="req">*</span></div>
+                  <div class="field-input filled">24/06/2024</div>
+                </div>
+                <div class="field">
+                  <div class="field-label">Due Date <span class="req">*</span></div>
+                  <div class="field-input filled">24/06/2024</div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">Description</div>
+                <textarea class="field-textarea">Optional description shown on invoice...</textarea>
+              </div>
+
+              <!-- Compliance sub-section -->
+              <div style="margin-top: 4px; padding-top: 16px; border-top: 1px solid #F1F3F5;">
+                <div style="font-size: 11px; font-weight: 600; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">Compliance (not shown on invoice)</div>
+                <div class="field-row">
+                  <div class="field">
+                    <div class="field-label">Transaction Type <span class="req">*</span></div>
+                    <div class="field-input select placeholder">Select type <span style="margin-left:auto;color:#ADB5BD;font-size:12px;">▾</span></div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">Purpose Code <span class="req">*</span></div>
+                    <div class="field-input select placeholder">Select code <span style="margin-left:auto;color:#ADB5BD;font-size:12px;">▾</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Payment Options + T&C -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <div class="section-number">4</div>
+              <div class="section-title">Payment Options</div>
+            </div>
+            <div class="form-section-body">
+              <div class="toggle-row">
+                <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+                <div class="toggle-label">Bank Transfer (VBAN details auto-added to footer)</div>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                <div class="toggle-label">Card Payments</div>
+                <div style="font-size:11px; color:#ADB5BD; margin-left:8px;">— Enable in Settings</div>
+              </div>
+              <div style="height: 1px; background: #F1F3F5; margin: 4px 0;"></div>
+              <div class="field">
+                <div class="field-label">Terms &amp; Conditions</div>
+                <textarea class="field-textarea" style="height: 60px;">Optional terms shown in invoice footer...</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spacer for footer clearance -->
+          <div style="height: 8px;"></div>
+
+        </div>
+
+        <!-- ── RIGHT: Live Preview ── -->
+        <div class="preview-panel">
+          <div class="preview-header">
+            <div class="preview-header-title">Invoice Preview</div>
+            <div class="preview-actions">
+              <button class="preview-action-btn">Change Template</button>
+              <button class="preview-action-btn">Edit Branding</button>
+            </div>
+          </div>
+          <div class="preview-body">
+            <div class="invoice-doc">
+              <div class="doc-header">
+                <div class="doc-logo"></div>
+                <div class="doc-title-block">
+                  <div class="doc-title-label">INVOICE</div>
+                  <div class="doc-num">INV-ACM-240624-00001</div>
+                </div>
+              </div>
+              <div class="doc-divider"></div>
+              <div class="doc-meta">
+                <div class="doc-meta-block">
+                  <div class="doc-meta-label">From</div>
+                  <div class="doc-meta-value wide"></div>
+                  <div class="doc-meta-value narrow" style="margin-top:3px;"></div>
+                  <div class="doc-meta-value" style="width:60%; margin-top:3px;"></div>
+                </div>
+                <div class="doc-meta-block" style="text-align:right; align-items:flex-end;">
+                  <div class="doc-meta-label">Bill To</div>
+                  <div class="doc-meta-value wide"></div>
+                  <div class="doc-meta-value narrow" style="margin-top:3px;"></div>
+                </div>
+              </div>
+              <div class="doc-meta" style="grid-template-columns: repeat(3,1fr); margin-top:4px;">
+                <div class="doc-meta-block">
+                  <div class="doc-meta-label">Invoice Date</div>
+                  <div class="doc-meta-value narrow"></div>
+                </div>
+                <div class="doc-meta-block">
+                  <div class="doc-meta-label">Due Date</div>
+                  <div class="doc-meta-value narrow"></div>
+                </div>
+                <div class="doc-meta-block">
+                  <div class="doc-meta-label">Amount Due</div>
+                  <div class="doc-meta-value" style="width:70%; height:16px; background:#DEE2E6;"></div>
+                </div>
+              </div>
+              <div class="doc-items-hatch">
+                <div class="doc-items-label">Line items will appear here</div>
+              </div>
+              <div class="doc-total-block">
+                <div class="doc-total-row"><span>Subtotal</span><span>USD 5,000.00</span></div>
+                <div class="doc-total-row grand"><span>Total Due</span><span>USD 5,000.00</span></div>
+              </div>
+              <div class="doc-footer-hatch">
+                <div class="doc-items-label">Bank transfer details + T&amp;C</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /overlay-body -->
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <button class="btn-ghost">Save as Draft</button>
+        <div class="footer-autosave">Auto-saved just now</div>
+        <button class="btn-primary">Activate Invoice →</button>
+      </div>
+
+    </div><!-- /overlay -->
+
+  </div><!-- /body -->
+</div><!-- /shell -->
+</body>
+</html>

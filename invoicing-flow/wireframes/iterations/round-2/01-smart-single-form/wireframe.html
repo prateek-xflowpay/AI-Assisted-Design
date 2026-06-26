@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R2 · 01 Smart Single Form — Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; }
+  .topnav { height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+  .shell-body { display: flex; height: calc(100vh - 48px); position: relative; }
+  .sidebar { width: 220px; background: #343A40; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; }
+  .sidebar-item { height: 38px; display: flex; align-items: center; padding: 0 20px; color: #ADB5BD; font-size: 13px; gap: 10px; }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 15px; height: 15px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+  .main { flex: 1; background: #F8F9FA; opacity: 0.2; }
+  .overlay { position: absolute; top: 0; left: 220px; right: 0; bottom: 0; background: #F8F9FA; display: flex; flex-direction: column; z-index: 10; }
+  .overlay-header { height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0; }
+  .overlay-title { font-size: 16px; font-weight: 600; color: #212529; }
+  .overlay-sub { font-size: 13px; color: #ADB5BD; }
+  .overlay-close { margin-left: auto; width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+  .overlay-body { flex: 1; display: flex; overflow: hidden; }
+  .form-panel { flex: 1; overflow-y: auto; padding: 24px 28px; }
+  .annotation-bar { background: #495057; color: #fff; font-size: 11px; padding: 8px 14px; line-height: 1.5; border-radius: 4px; margin-bottom: 16px; }
+  .form-col { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  /* Block (no step numbers — just labelled sections on one page) */
+  .block { background: #fff; border: 1px solid #DEE2E6; border-radius: 8px; padding: 18px 20px; box-shadow: rgba(68,78,94,0.06) 0px 1px 3px; }
+  .block-title { font-size: 13px; font-weight: 600; color: #212529; margin-bottom: 14px; display:flex; align-items:center; gap:8px;}
+  .block-title .tag { font-size: 10px; font-weight: 600; background: #E9ECEF; color: #6C757D; border-radius: 3px; padding: 2px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field-row { display: flex; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; margin-bottom: 12px; }
+  .field-label { font-size: 11px; font-weight: 500; color: #495057; }
+  .field-label .req { color: #ADB5BD; }
+  .field-input { height: 38px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px; padding: 0 12px; font-size: 13px; color: #495057; display: flex; align-items: center; }
+  .field-input.placeholder { color: #ADB5BD; }
+  .field-input.filled { background: #F8F9FA; }
+  .field-input.big { height: 46px; font-size: 15px; font-weight: 600; }
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th { font-size: 11px; font-weight: 500; color: #6C757D; text-align: left; padding: 5px 6px; border-bottom: 1px solid #DEE2E6; }
+  .items-table td { font-size: 12px; padding: 7px 6px; border-bottom: 1px solid #F1F3F5; color: #495057; }
+  .items-table td input { height: 30px; border: 1px solid #DEE2E6; border-radius: 4px; padding: 0 8px; width: 100%; font-size: 12px; background: #F8F9FA; color: #495057; font-family: inherit; }
+  .items-table td input.empty { color: #ADB5BD; background: #fff; }
+  .add-item-btn { height: 30px; border: 1px dashed #ADB5BD; border-radius: 4px; background: transparent; color: #6C757D; font-size: 12px; cursor: pointer; width: 100%; margin-top: 6px; font-family: inherit; }
+  .items-total { display: flex; justify-content: flex-end; gap: 12px; font-size: 13px; padding-right: 2px; margin-top: 10px; }
+  .items-total .val { font-weight: 600; color: #212529; }
+  /* Collapsed "advanced" disclosure */
+  .disclosure { border: 1px solid #DEE2E6; border-radius: 8px; background:#fff; }
+  .disclosure-head { display: flex; align-items: center; gap: 10px; padding: 14px 20px; cursor: pointer; }
+  .disclosure-chev { color: #ADB5BD; font-size: 12px; }
+  .disclosure-title { font-size: 13px; font-weight: 600; color: #495057; }
+  .disclosure-hint { font-size: 11px; color: #ADB5BD; margin-left: auto; }
+  /* smart default chip */
+  .default-row { display:flex; flex-wrap:wrap; gap:6px; margin-top: 6px;}
+  .default-chip { font-size: 11px; background:#F1F3F5; border:1px solid #E9ECEF; color:#6C757D; border-radius: 12px; padding: 3px 10px; display:flex; gap:6px; align-items:center;}
+  .default-chip .x { color:#ADB5BD; }
+  .help { font-size: 11px; color: #ADB5BD; margin-top: 2px; }
+  /* Preview */
+  .preview-panel { width: 380px; background: #E9ECEF; border-left: 1px solid #DEE2E6; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+  .preview-header { height: 44px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 16px; gap: 10px; }
+  .preview-header-title { font-size: 12px; font-weight: 600; color: #495057; }
+  .preview-action-btn { height: 28px; border: 1px solid #ADB5BD; border-radius: 4px; background: #fff; color: #6C757D; font-size: 11px; padding: 0 10px; cursor: pointer; margin-left: auto; }
+  .preview-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; justify-content: center; }
+  .invoice-doc { width: 100%; background: #fff; border-radius: 4px; box-shadow: rgba(68,78,94,0.15) 0px 2px 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-height: 460px; }
+  .doc-line { height: 9px; background: #E9ECEF; border-radius: 2px; }
+  .doc-divider { height: 1px; background: #E9ECEF; }
+  .doc-meta-lbl { font-size: 10px; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.05em; }
+  .doc-meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .doc-items-hatch { height: 90px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px); border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #ADB5BD; }
+  .doc-total-row { display: flex; justify-content: flex-end; gap: 24px; font-size: 12px; color: #6C757D; }
+  .doc-total-row.grand { font-weight: 600; color: #212529; font-size: 13px; }
+  /* Footer */
+  .overlay-footer { height: 60px; background: #fff; border-top: 1px solid #DEE2E6; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+  .btn-primary { height: 38px; background: #495057; color: #fff; border: none; border-radius: 6px; padding: 0 22px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-ghost { height: 38px; background: transparent; color: #ADB5BD; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .footer-note { font-size: 12px; color: #ADB5BD; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="topnav"><div class="topnav-logo"></div><div class="topnav-spacer"></div><div class="topnav-badge"></div><div class="topnav-avatar"></div></div>
+<div class="shell-body">
+  <div class="sidebar">
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+    <div class="sidebar-section">Receive Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+    <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+    <div class="sidebar-section">Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+  </div>
+  <div class="main"></div>
+
+  <div class="overlay">
+    <div class="overlay-header">
+      <div class="overlay-title">Create Invoice</div>
+      <div class="overlay-sub">One page · fill what you need, defaults handle the rest</div>
+      <div class="overlay-close">×</div>
+    </div>
+
+    <div class="overlay-body">
+      <div class="form-panel">
+        <div class="form-col">
+          <div class="annotation-bar">
+            <strong>Model A — Smart single-screen form:</strong> The 4-step wizard collapses to ONE scroll. Only the 3 things every invoice needs are shown by default — Client, Items, Payment. Compliance &amp; extra details are pre-filled with smart defaults and tucked into a collapsed "More details" section. No Next/Back; no step tabs. Activate is always reachable.
+          </div>
+
+          <!-- ESSENTIALS -->
+          <div class="block">
+            <div class="block-title">Client</div>
+            <div class="field">
+              <div class="field-label">Partner <span class="req">*</span></div>
+              <div class="field-input filled select">Acme Corp · USD ▾</div>
+              <div class="help">+ Add new partner inline</div>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-title">Items</div>
+            <table class="items-table">
+              <thead><tr><th style="width:42%;">Item</th><th style="width:10%;">Qty</th><th style="width:22%;">Unit Price</th><th style="width:20%;">Total</th><th style="width:6%;"></th></tr></thead>
+              <tbody>
+                <tr><td><input value="Software Development" readonly></td><td><input value="1" style="text-align:right;" readonly></td><td><input value="5,000.00" style="text-align:right;" readonly></td><td style="font-weight:600;text-align:right;">5,000.00</td><td style="text-align:right;color:#ADB5BD;">×</td></tr>
+                <tr><td><input class="empty" placeholder="Select or add item…" readonly></td><td><input class="empty" placeholder="1" style="text-align:right;" readonly></td><td><input class="empty" placeholder="0.00" style="text-align:right;" readonly></td><td style="text-align:right;color:#ADB5BD;">—</td><td></td></tr>
+              </tbody>
+            </table>
+            <button class="add-item-btn">+ Add item</button>
+            <div class="items-total"><span style="color:#6C757D;">Total</span><span class="val">USD 5,000.00</span></div>
+          </div>
+
+          <div class="block">
+            <div class="block-title">Payment</div>
+            <div class="default-row">
+              <span class="default-chip">Bank transfer (VBAN) <span class="x">✓</span></span>
+              <span class="default-chip">Card payment <span class="x">+</span></span>
+              <span class="default-chip">Payment link on <span class="x">✓</span></span>
+            </div>
+            <div class="help">Defaults from your Settings. Tap a chip to toggle.</div>
+          </div>
+
+          <!-- COLLAPSED ADVANCED -->
+          <div class="disclosure">
+            <div class="disclosure-head">
+              <span class="disclosure-chev">▸</span>
+              <span class="disclosure-title">More details</span>
+              <span class="disclosure-hint">Invoice #, dates, purpose code, T&amp;C — all pre-filled</span>
+            </div>
+          </div>
+
+          <!-- collapsed preview of what's auto-filled inside "More details" -->
+          <div style="display:flex; flex-wrap:wrap; gap:6px; padding: 0 4px;">
+            <span class="default-chip">Invoice # INV-ACM-00042</span>
+            <span class="default-chip">Date today</span>
+            <span class="default-chip">Due +30 days</span>
+            <span class="default-chip">Purpose P1006</span>
+            <span class="default-chip">Txn type · Goods</span>
+          </div>
+          <div class="help" style="padding-left:4px;">Compliance fields auto-suggested from this partner's history. Open "More details" only to change them.</div>
+
+          <div style="height:8px;"></div>
+        </div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="preview-header"><div class="preview-header-title">Invoice Preview</div><button class="preview-action-btn">Change Template</button></div>
+        <div class="preview-body">
+          <div class="invoice-doc">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="width:64px; height:22px; background:#E9ECEF; border-radius:3px; display:flex;align-items:center;justify-content:center;font-size:10px;color:#ADB5BD;">LOGO</div>
+              <div style="text-align:right;"><div style="font-size:15px;font-weight:700;color:#ADB5BD;letter-spacing:0.04em;">INVOICE</div><div style="font-size:10px;color:#ADB5BD;margin-top:2px;">INV-ACM-00042</div></div>
+            </div>
+            <div class="doc-divider"></div>
+            <div class="doc-meta-row">
+              <div><div class="doc-meta-lbl">From</div><div class="doc-line" style="width:80%;margin-top:4px;"></div><div class="doc-line" style="width:55%;margin-top:3px;"></div></div>
+              <div style="text-align:right;"><div class="doc-meta-lbl">Bill To</div><div style="font-size:12px;font-weight:500;color:#495057;margin-top:4px;">Acme Corp</div></div>
+            </div>
+            <div class="doc-items-hatch">Line items render here</div>
+            <div class="doc-total-row"><span>Subtotal</span><span>USD 5,000.00</span></div>
+            <div class="doc-total-row grand"><span>Total Due</span><span>USD 5,000.00</span></div>
+            <div class="doc-divider"></div>
+            <div class="doc-line" style="width:90%;"></div>
+            <div class="doc-line" style="width:70%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay-footer">
+      <button class="btn-ghost">Save as Draft</button>
+      <div class="footer-note">Everything required is filled — ready to activate</div>
+      <button class="btn-primary">Activate Invoice →</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

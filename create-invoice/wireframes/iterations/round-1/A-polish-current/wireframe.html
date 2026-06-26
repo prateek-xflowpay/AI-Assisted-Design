@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Model A — Polish Current Structure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;background:#d8d8d8;padding:32px;color:#1a1a1a}
+
+/* Header */
+.model-header{margin-bottom:32px}
+.model-tag{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:4px}
+.model-title{font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:6px}
+.model-hypothesis{font-size:12px;color:#555;max-width:680px;padding-bottom:20px;border-bottom:2.5px solid #1a1a1a}
+
+/* Screen wrap */
+.screen-wrap{margin-bottom:28px}
+.screen-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.screen-tag .ann{font-weight:400;color:#aaa;text-transform:none;letter-spacing:0;font-size:11px}
+.screen{background:#fff;border:1.5px solid #c0c0c0;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* App chrome */
+.topbar{background:#111;height:44px;display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0}
+.topbar-logo{width:56px;height:12px;background:#444;border-radius:2px}
+.topbar-spacer{flex:1}
+.topbar-rate{font-size:11px;color:#888;font-family:monospace}
+.topbar-icon{width:26px;height:26px;border-radius:50%;background:#333}
+
+/* Page layout */
+.page-layout{display:flex;height:520px}
+.sidebar{width:196px;background:#f6f6f6;border-right:1.5px solid #e0e0e0;padding:12px 0;flex-shrink:0}
+.sidebar-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#bbb;padding:10px 16px 4px}
+.sidebar-item{padding:8px 16px;font-size:12px;color:#666;display:flex;align-items:center;gap:8px}
+.sidebar-item.active{background:#eaeaea;color:#1a1a1a;font-weight:600;border-right:3px solid #1a1a1a}
+.sid-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
+.sid-dot.active{background:#1a1a1a}
+
+.page-main{flex:1;padding:24px;overflow:hidden;display:flex;flex-direction:column}
+.page-title{font-size:17px;font-weight:700;margin-bottom:14px}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1.5px solid #e0e0e0;margin-bottom:14px}
+.tab{padding:7px 14px;font-size:11px;color:#999;border-bottom:2px solid transparent;margin-bottom:-1.5px;cursor:pointer}
+.tab.active{color:#1a1a1a;font-weight:600;border-bottom-color:#1a1a1a}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.btn{padding:6px 14px;border:1.5px solid #ccc;border-radius:4px;font-size:12px;font-weight:500;color:#333;background:#fff;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn.primary{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.btn.link{border:none;color:#555;background:transparent;text-decoration:underline;padding-left:0}
+.caret{font-size:9px;opacity:.6}
+.tb-spacer{flex:1}
+.search-box{height:32px;border:1.5px solid #d0d0d0;border-radius:4px;padding:0 10px;font-size:12px;color:#bbb;display:flex;align-items:center;gap:6px;min-width:180px}
+.search-icon{width:12px;height:12px;border:1.5px solid #ccc;border-radius:50%;flex-shrink:0}
+
+/* Table */
+.table-wrap{flex:1;overflow:hidden}
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;padding:8px 10px;border-bottom:1.5px solid #e8e8e8;white-space:nowrap}
+.table td{padding:10px 10px;font-size:12px;color:#333;border-bottom:1px solid #f2f2f2;white-space:nowrap}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.badge.active-b{background:#e6f4ea;color:#1e7e34}
+.badge.draft-b{background:#f0f0f0;color:#888}
+.kebab{color:#ccc;font-size:14px;cursor:pointer}
+.inv-no{color:#555;text-decoration:underline;font-size:11px}
+
+/* ─── Wizard ─── */
+.wizard-screen{display:flex;height:580px}
+.wiz-form{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1.5px solid #e8e8e8}
+.wiz-body{flex:1;padding:28px 32px;overflow-y:auto}
+.wiz-preview{width:360px;flex-shrink:0;padding:20px;background:#fafafa;display:flex;flex-direction:column}
+
+/* Step indicator */
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:6px}
+.step-node{width:26px;height:26px;border-radius:50%;border:2px solid #d0d0d0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#bbb;flex-shrink:0}
+.step-node.done{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.step-node.current{border-color:#1a1a1a;color:#1a1a1a}
+.step-line{flex:1;height:1.5px;background:#e0e0e0}
+.step-line.done{background:#1a1a1a}
+.step-names{display:flex;justify-content:space-between;margin-bottom:24px}
+.step-name{font-size:9px;color:#bbb;text-align:center;width:52px}
+.step-name.current{color:#1a1a1a;font-weight:700}
+.step-name.done{color:#666}
+
+.section-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.section-sub{font-size:11px;color:#999;margin-bottom:18px}
+
+/* Field */
+.field{margin-bottom:14px}
+.field-row{display:flex;gap:12px;margin-bottom:0}
+.field-row .field{flex:1;margin-bottom:0}
+.field-row{margin-bottom:14px}
+label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:5px}
+.input{width:100%;height:36px;border:1.5px solid #d0d0d0;border-radius:4px;background:#fff;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#1a1a1a}
+.input.sel{justify-content:space-between;cursor:pointer}
+.input.sel::after{content:'▾';color:#aaa;font-size:10px}
+.input.ph{color:#bbb}
+.input.constrained{max-width:100%;overflow:hidden}
+
+/* NEW: Recent partners */
+.new-badge{display:inline-block;background:#1a1a1a;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em;vertical-align:middle;margin-left:4px}
+.recent-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:8px}
+.partner-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.p-chip{padding:6px 12px;border:1.5px solid #d0d0d0;border-radius:20px;font-size:12px;color:#333;background:#f8f8f8;cursor:pointer;display:flex;align-items:center;gap:7px}
+.p-chip .av{width:18px;height:18px;border-radius:50%;background:#d8d8d8;flex-shrink:0}
+.or-divider{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#ccc;font-size:10px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:#e8e8e8}
+
+/* Empty state variant */
+.empty-note{border:1.5px dashed #d8d8d8;border-radius:6px;padding:16px;text-align:center;margin-top:8px}
+.empty-note .en-icon{width:32px;height:32px;border-radius:50%;background:#f0f0f0;margin:0 auto 8px}
+.empty-note .en-title{font-size:12px;font-weight:600;color:#555;margin-bottom:3px}
+.empty-note .en-desc{font-size:11px;color:#aaa;margin-bottom:10px}
+
+/* Items (NEW: single-pass, no save/cancel gate) */
+.items-cols{display:grid;grid-template-columns:3fr 1fr 1.2fr .8fr 24px;gap:8px;margin-bottom:6px;align-items:center}
+.items-col-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa}
+.item-row-active{display:grid;grid-template-columns:3fr 1fr 1.2fr .8fr 24px;gap:8px;margin-bottom:6px;align-items:center;padding:8px;border:1.5px solid #1a1a1a;border-radius:4px;background:#fff}
+.item-row-saved{display:grid;grid-template-columns:3fr 1fr 1.2fr .8fr 24px;gap:8px;margin-bottom:6px;align-items:center;padding:8px 10px;background:#fafafa;border:1.5px solid #e8e8e8;border-radius:4px;font-size:12px}
+.item-input{height:30px;border:1.5px solid #d0d0d0;border-radius:3px;padding:0 8px;font-size:12px;display:flex;align-items:center}
+.item-total{font-size:12px;color:#555;font-weight:600}
+.item-remove{width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#bbb;cursor:pointer;flex-shrink:0}
+.add-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer;padding:6px 0}
+.add-plus{width:20px;height:20px;border:1.5px solid #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#aaa;flex-shrink:0}
+.removed-note{font-size:11px;color:#43a047;background:#f1f8e9;border-left:3px solid #43a047;padding:6px 10px;border-radius:0 3px 3px 0;margin-bottom:14px}
+
+/* Toggles */
+.toggle-group{margin-bottom:4px}
+.toggle-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f2f2f2}
+.toggle-row:last-of-type{border-bottom:none}
+.t-info{flex:1}
+.t-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
+.t-desc{font-size:11px;color:#999;margin-bottom:0}
+.t-fee{font-size:11px;color:#444;margin-top:5px;padding:5px 8px;background:#f5f5f5;border-radius:3px;display:inline-block}
+.t-fee a{color:#444;text-decoration:underline}
+.toggle{width:38px;height:21px;border-radius:11px;background:#1a1a1a;position:relative;flex-shrink:0;margin-top:2px;cursor:pointer}
+.toggle.off{background:#d8d8d8}
+.toggle::after{content:'';width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:3px;right:3px}
+.toggle.off::after{right:auto;left:3px}
+
+/* Wizard footer */
+.wiz-footer{padding:14px 32px;border-top:1.5px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;background:#fff}
+
+/* PDF Preview */
+.preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pdf-doc{border:1.5px solid #d8d8d8;border-radius:3px;background:#fff;padding:18px;flex:1;overflow:hidden}
+.pdf-h{display:flex;justify-content:space-between;margin-bottom:16px}
+.pdf-htitle{font-size:16px;font-weight:800;color:#1a1a1a}
+.pdf-logo{width:44px;height:18px;background:#e0e0e0;border-radius:2px}
+.pdf-row{display:flex;justify-content:space-between;margin-bottom:10px}
+.pdf-block{flex:1}
+.pdf-block-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ccc;margin-bottom:5px}
+.pline{height:7px;background:#f0f0f0;border-radius:2px;margin-bottom:4px}
+.pline.w90{width:90%}.pline.w70{width:70%}.pline.w50{width:50%}.pline.w40{width:40%}.pline.w30{width:30%}.pline.w60{width:60%}
+.pdf-divider{height:1px;background:#ebebeb;margin:12px 0}
+.pdf-table-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;margin-bottom:5px}
+.pdf-table-head span{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ccc}
+.pdf-table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;margin-bottom:4px}
+.pdf-table-row .pline{margin-bottom:0}
+.pdf-total{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1.5px solid #e8e8e8}
+.pdf-total span{font-size:11px;font-weight:700;color:#1a1a1a}
+/* Payment block in preview */
+.pdf-pay-block{margin-top:12px;border-top:1px solid #ebebeb;padding-top:10px}
+.pdf-pay-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ccc;margin-bottom:7px}
+.pdf-pay-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.pdf-pay-icon{width:22px;height:14px;background:#e8e8e8;border-radius:2px;flex-shrink:0}
+.pdf-pay-lines{flex:1}
+.pdf-pay-line{height:6px;background:#f0f0f0;border-radius:2px;margin-bottom:3px}
+.pdf-pay-line.w55{width:55%}
+/* Preview sync annotation */
+.sync-note{font-size:10px;color:#1565c0;background:#e3f2fd;border-left:3px solid #1565c0;padding:5px 8px;border-radius:0 3px 3px 0;margin-bottom:8px}
+
+/* Annotation callout */
+.ann-box{background:#fffde7;border:1.5px solid #f0c040;border-radius:4px;padding:7px 10px;margin:8px 0 14px;font-size:11px;color:#5d4037;display:flex;gap:7px}
+.ann-icon{flex-shrink:0;font-size:13px}
+
+/* Fix label */
+.fix-tag{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em;margin-left:5px;vertical-align:middle}
+
+.screen-divider{height:1px;background:#c8c8c8;margin:8px 0 20px;display:flex;align-items:center;gap:12px;color:#aaa;font-size:10px}
+.screen-divider::before,.screen-divider::after{content:'';flex:1;height:1px;background:#c0c0c0}
+</style>
+</head>
+<body>
+
+<div class="model-header">
+  <div class="model-tag">Round 1 · Model A</div>
+  <div class="model-title">Polish the Current Structure</div>
+  <div class="model-hypothesis">Keep the 4-step wizard. Fix friction in-place: recent partners at Client, single-pass item entry at Products, constrained Purpose Code select at Invoice Details, inline fee indicator + synced preview at Payment Methods.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1 — Invoices Listing
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 1 — Invoices Listing <span class="ann">Entry point: "Add Invoice" split button</span></div>
+  <div class="screen">
+    <div class="topbar">
+      <div class="topbar-logo"></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-rate">1 USD = ₹83.42</div>
+      <div class="topbar-icon"></div>
+    </div>
+    <div class="page-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">Receive Payments</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Home</div>
+        <div class="sidebar-item active"><div class="sid-dot active"></div>Invoices</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Limit Orders</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Payouts</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Balances</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Partners</div>
+        <div class="sidebar-section">Account</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Features</div>
+        <div class="sidebar-item"><div class="sid-dot"></div>Settings</div>
+      </div>
+      <div class="page-main">
+        <div class="page-title">Invoices</div>
+        <div class="tabs">
+          <div class="tab active">Active <span style="color:#bbb">12</span></div>
+          <div class="tab">Draft <span style="color:#bbb">3</span></div>
+          <div class="tab">Due in 7 days <span style="color:#bbb">2</span></div>
+          <div class="tab">Hold</div>
+          <div class="tab">Input Required</div>
+          <div class="tab">Overdue <span style="color:#bbb">1</span></div>
+        </div>
+        <div class="toolbar">
+          <div class="btn primary">Add Invoice <span class="caret">▾</span></div>
+          <div class="search-box"><div class="search-icon"></div><span>Search invoices…</span></div>
+          <div class="tb-spacer"></div>
+          <div class="btn">Filter</div>
+          <div class="btn">Sort: Invoice Date ▾</div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Invoice Date</th><th>Due Date</th><th>Invoice No.</th>
+                <th>Partner</th><th>Amount</th><th>Pending</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>25 Jun 2026</td><td>25 Jul 2026</td>
+                <td class="inv-no">INV-ACM-250626-001</td>
+                <td>Acme Corp</td><td>USD 12,000.00</td><td>USD 12,000.00</td>
+                <td><span class="badge active-b">Active</span></td><td class="kebab">⋮</td>
+              </tr>
+              <tr>
+                <td>20 Jun 2026</td><td>20 Jul 2026</td>
+                <td class="inv-no">INV-GLB-200626-002</td>
+                <td>Globex Inc.</td><td>USD 5,500.00</td><td>USD 5,500.00</td>
+                <td><span class="badge active-b">Active</span></td><td class="kebab">⋮</td>
+              </tr>
+              <tr>
+                <td>18 Jun 2026</td><td>18 Jul 2026</td>
+                <td class="inv-no">INV-ACM-180626-003</td>
+                <td>Acme Corp</td><td>USD 8,200.00</td><td>—</td>
+                <td><span class="badge draft-b">Draft</span></td><td class="kebab">⋮</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2 — Step 1: Client (IMPROVED)
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 2 — Wizard · Step 1: Client <span class="ann">US-6: Recent partners surfaced first; empty-state inline add</span></div>
+  <div class="screen">
+    <div class="topbar"><div class="topbar-logo"></div><div class="topbar-spacer"></div><div class="topbar-rate">1 USD = ₹83.42</div><div class="topbar-icon"></div></div>
+    <div class="wizard-screen">
+      <div class="wiz-form">
+        <div class="wiz-body">
+          <div class="step-bar">
+            <div class="step-node current">1</div><div class="step-line"></div>
+            <div class="step-node">2</div><div class="step-line"></div>
+            <div class="step-node">3</div><div class="step-line"></div>
+            <div class="step-node">4</div>
+          </div>
+          <div class="step-names">
+            <div class="step-name current">Client</div>
+            <div class="step-name">Products</div>
+            <div class="step-name">Invoice Details</div>
+            <div class="step-name">Payment Methods</div>
+          </div>
+
+          <div class="section-title">Partner Details</div>
+          <div class="section-sub">Select the partner against whom you are creating the invoice</div>
+
+          <!-- NEW: Recent partners -->
+          <div class="recent-label">Recent Partners <span class="new-badge">new</span></div>
+          <div class="partner-chips">
+            <div class="p-chip"><div class="av"></div>Acme Corp</div>
+            <div class="p-chip"><div class="av"></div>Globex Inc.</div>
+            <div class="p-chip"><div class="av"></div>Initech Ltd.</div>
+          </div>
+          <div class="or-divider">or search all partners</div>
+          <div class="field">
+            <label>Partner</label>
+            <div class="input sel ph"><span>Search by name or email…</span></div>
+          </div>
+
+          <!-- Empty state variant shown below as annotation -->
+          <div class="ann-box">
+            <span class="ann-icon">💡</span>
+            <span><strong>Empty state variant:</strong> If no partners exist, the recent chips section is hidden and replaced with the panel below — user can add a partner inline without leaving the flow.</span>
+          </div>
+          <div class="empty-note">
+            <div class="en-icon"></div>
+            <div class="en-title">No partners yet</div>
+            <div class="en-desc">Add your first partner to get started. Your invoice progress is saved.</div>
+            <div class="btn" style="margin:0 auto;display:inline-flex">+ Add a partner</div>
+          </div>
+        </div>
+        <div class="wiz-footer">
+          <div class="btn">← Back</div>
+          <div class="btn primary">Next →</div>
+        </div>
+      </div>
+      <div class="wiz-preview">
+        <div class="preview-label">Preview</div>
+        <div class="pdf-doc">
+          <div class="pdf-h"><div class="pdf-htitle">Invoice</div><div class="pdf-logo"></div></div>
+          <div class="pdf-row">
+            <div class="pdf-block"><div class="pdf-block-label">From</div><div class="pline w70"></div><div class="pline w50"></div></div>
+            <div class="pdf-block"><div class="pdf-block-label">To</div><div class="pline w60" style="background:#e8e8e8"></div><div class="pline w40" style="background:#e8e8e8"></div></div>
+          </div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-block-label">Items</div>
+          <div class="pline w90" style="background:#f5f5f5"></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-total"><span style="color:#bbb;font-size:10px">Total</span><span style="color:#bbb">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3 — Step 2: Products (IMPROVED)
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 3 — Wizard · Step 2: Products <span class="ann">US-7: Single-pass item entry, no per-row Save/Cancel gate</span></div>
+  <div class="screen">
+    <div class="topbar"><div class="topbar-logo"></div><div class="topbar-spacer"></div><div class="topbar-rate">1 USD = ₹83.42</div><div class="topbar-icon"></div></div>
+    <div class="wizard-screen">
+      <div class="wiz-form">
+        <div class="wiz-body">
+          <div class="step-bar">
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node current">2</div><div class="step-line"></div>
+            <div class="step-node">3</div><div class="step-line"></div>
+            <div class="step-node">4</div>
+          </div>
+          <div class="step-names">
+            <div class="step-name done">Client</div>
+            <div class="step-name current">Products</div>
+            <div class="step-name">Invoice Details</div>
+            <div class="step-name">Payment Methods</div>
+          </div>
+
+          <div class="section-title">Invoice Items</div>
+
+          <div class="field-row">
+            <div class="field" style="flex:.5">
+              <label>Currency</label>
+              <div class="input sel">USD — United States Dollar</div>
+            </div>
+          </div>
+
+          <div class="removed-note"><span class="new-badge">change</span> &nbsp;No per-row Save/Cancel — items are confirmed inline. Press Next to proceed.</div>
+
+          <div class="items-cols">
+            <div class="items-col-label">Item</div>
+            <div class="items-col-label" style="text-align:right">Qty</div>
+            <div class="items-col-label" style="text-align:right">Price (USD)</div>
+            <div class="items-col-label" style="text-align:right">Total</div>
+            <div></div>
+          </div>
+
+          <!-- Saved item -->
+          <div class="item-row-saved">
+            <div>Software consulting — Q2 retainer</div>
+            <div style="text-align:right;color:#555">1</div>
+            <div style="text-align:right;color:#555">10,000.00</div>
+            <div class="item-total" style="text-align:right">10,000.00</div>
+            <div class="item-remove">×</div>
+          </div>
+
+          <!-- Active row (being entered) -->
+          <div class="item-row-active">
+            <div class="item-input sel" style="display:flex;align-items:center;justify-content:space-between">Select or add item<span style="color:#aaa;font-size:10px">▾</span></div>
+            <div class="item-input" style="text-align:right;justify-content:flex-end">1</div>
+            <div class="item-input ph" style="color:#bbb">0.00</div>
+            <div class="item-total" style="text-align:right;color:#bbb">—</div>
+            <div class="item-remove">×</div>
+          </div>
+
+          <div class="add-row">
+            <div class="add-plus">+</div>
+            <span>Add another item</span>
+          </div>
+
+          <div class="pdf-divider" style="margin:16px 0"></div>
+          <div style="display:flex;justify-content:flex-end;gap:16px;font-size:12px;color:#555">
+            <span>Subtotal</span><strong>USD 10,000.00</strong>
+          </div>
+        </div>
+        <div class="wiz-footer">
+          <div class="btn">← Back</div>
+          <div class="btn primary">Next →</div>
+        </div>
+      </div>
+      <div class="wiz-preview">
+        <div class="preview-label">Preview</div>
+        <div class="pdf-doc">
+          <div class="pdf-h"><div class="pdf-htitle">Invoice</div><div class="pdf-logo"></div></div>
+          <div class="pdf-row">
+            <div class="pdf-block"><div class="pdf-block-label">From</div><div class="pline w70"></div><div class="pline w50"></div></div>
+            <div class="pdf-block"><div class="pdf-block-label">To</div><div class="pline w60"></div><div class="pline w40"></div></div>
+          </div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-table-head"><span>Description</span><span>Qty</span><span>Price</span><span>Total</span></div>
+          <div class="pdf-table-row"><div class="pline w90"></div><div class="pline w60"></div><div class="pline w70"></div><div class="pline w80"></div></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-total"><span>Total</span><span>USD 10,000.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 4 — Step 3: Invoice Details (FIXED)
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 4 — Wizard · Step 3: Invoice Details <span class="ann">XFLOW-5799: Purpose Code select constrained to container width</span></div>
+  <div class="screen">
+    <div class="topbar"><div class="topbar-logo"></div><div class="topbar-spacer"></div><div class="topbar-rate">1 USD = ₹83.42</div><div class="topbar-icon"></div></div>
+    <div class="wizard-screen">
+      <div class="wiz-form">
+        <div class="wiz-body">
+          <div class="step-bar">
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node current">3</div><div class="step-line"></div>
+            <div class="step-node">4</div>
+          </div>
+          <div class="step-names">
+            <div class="step-name done">Client</div>
+            <div class="step-name done">Products</div>
+            <div class="step-name current">Invoice Details</div>
+            <div class="step-name">Payment Methods</div>
+          </div>
+
+          <div class="section-title">Invoice Info</div>
+          <div class="field-row">
+            <div class="field"><label>Invoice Number</label><div class="input">INV-ACM-250626-004</div></div>
+            <div class="field"><label>Invoice Date</label><div class="input sel">25/06/2026</div></div>
+            <div class="field"><label>Due Date</label><div class="input sel">25/07/2026</div></div>
+          </div>
+
+          <div class="section-title" style="margin-top:8px">Compliance</div>
+          <div class="section-sub" style="margin-top:-12px">Not added to the invoice — for regulatory reporting only</div>
+
+          <div class="field">
+            <label>Type of Transaction</label>
+            <div class="input sel">Services</div>
+          </div>
+
+          <div class="field">
+            <label>Purpose Code <span class="fix-tag">fixed</span></label>
+            <!-- FIXED: constrained to container, does not overflow -->
+            <div class="input sel constrained" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;padding:0 28px 0 10px;line-height:36px;position:relative">
+              P0802 — Software consultancy / implementation
+              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#aaa;font-size:10px">▾</span>
+            </div>
+            <div style="font-size:10px;color:#aaa;margin-top:4px">Select constrained to container width — text truncated with ellipsis if too long</div>
+          </div>
+
+          <div class="field">
+            <label>Short Description <span style="color:#ccc;font-weight:400">(optional)</span></label>
+            <div class="input ph">Add a short description…</div>
+          </div>
+
+          <div class="section-title" style="margin-top:8px">Your Details</div>
+          <div style="font-size:12px;color:#888;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:4px;padding:12px">
+            <div style="margin-bottom:4px"><strong style="color:#555">Name:</strong> Your Business Name</div>
+            <div style="margin-bottom:4px"><strong style="color:#555">Address:</strong> 123 Main St, City</div>
+            <div style="color:#bbb;font-size:11px">Display-only · sourced from account settings</div>
+          </div>
+        </div>
+        <div class="wiz-footer">
+          <div class="btn">← Back</div>
+          <div class="btn primary">Next →</div>
+        </div>
+      </div>
+      <div class="wiz-preview">
+        <div class="preview-label">Preview</div>
+        <div class="pdf-doc">
+          <div class="pdf-h"><div class="pdf-htitle">Invoice</div><div class="pdf-logo"></div></div>
+          <div class="pdf-row">
+            <div class="pdf-block"><div class="pdf-block-label">From</div><div class="pline w70"></div><div class="pline w50"></div></div>
+            <div class="pdf-block"><div class="pdf-block-label">To</div><div class="pline w60"></div><div class="pline w40"></div></div>
+          </div>
+          <div class="pdf-block" style="margin-bottom:10px"><div class="pdf-block-label">Details</div><div class="pline w50"></div><div class="pline w40"></div></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-table-head"><span>Description</span><span>Qty</span><span>Price</span><span>Total</span></div>
+          <div class="pdf-table-row"><div class="pline w90"></div><div class="pline w60"></div><div class="pline w70"></div><div class="pline w80"></div></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-total"><span>Total</span><span>USD 10,000.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 5 — Step 4: Payment Methods (FIXED + NEW)
+     Bank ON, Card ON
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 5 — Wizard · Step 4: Payment Methods <span class="ann">XFLOW-9620: Fee indicator inline · XFLOW-9601: Preview synced (Bank ON, Card ON)</span></div>
+  <div class="screen">
+    <div class="topbar"><div class="topbar-logo"></div><div class="topbar-spacer"></div><div class="topbar-rate">1 USD = ₹83.42</div><div class="topbar-icon"></div></div>
+    <div class="wizard-screen">
+      <div class="wiz-form">
+        <div class="wiz-body">
+          <div class="step-bar">
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node current">4</div>
+          </div>
+          <div class="step-names">
+            <div class="step-name done">Client</div>
+            <div class="step-name done">Products</div>
+            <div class="step-name done">Invoice Details</div>
+            <div class="step-name current">Payment Methods</div>
+          </div>
+
+          <div class="section-title">Payment</div>
+
+          <div class="toggle-group">
+            <div class="toggle-row">
+              <div class="t-info">
+                <div class="t-title">Bank Transfer</div>
+                <div class="t-desc">ACH &amp; Fedwire details added automatically to the invoice footer</div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="t-info">
+                <div class="t-title">Card Payments</div>
+                <div class="t-desc">Your buyer pays via credit or debit card</div>
+                <!-- NEW: Fee indicator (XFLOW-9620) -->
+                <div class="t-fee">Card processing fee is borne by <strong>you</strong> · <a href="#">Manage in Settings →</a> <span class="fix-tag" style="background:#e3f2fd;color:#1565c0">new</span></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+
+            <div class="toggle-row">
+              <div class="t-info">
+                <div class="t-title">Payment Link</div>
+                <div class="t-desc">Send a link for your buyer to pay online</div>
+              </div>
+              <div class="toggle off"></div>
+            </div>
+          </div>
+
+          <div class="pdf-divider" style="margin:16px 0"></div>
+          <div class="section-title">Terms &amp; Conditions</div>
+          <div class="field">
+            <div class="input ph" style="height:60px;align-items:flex-start;padding-top:10px">Add terms and conditions (optional)…</div>
+          </div>
+        </div>
+        <div class="wiz-footer">
+          <div class="btn">← Back</div>
+          <div class="btn primary">Send Invoice →</div>
+        </div>
+      </div>
+      <div class="wiz-preview">
+        <div class="sync-note"><strong>XFLOW-9601:</strong> Preview updates in real time as toggles change (≤100ms)</div>
+        <div class="preview-label">Preview</div>
+        <div class="pdf-doc">
+          <div class="pdf-h"><div class="pdf-htitle">Invoice</div><div class="pdf-logo"></div></div>
+          <div class="pdf-row">
+            <div class="pdf-block"><div class="pdf-block-label">From</div><div class="pline w70"></div><div class="pline w50"></div></div>
+            <div class="pdf-block"><div class="pdf-block-label">To</div><div class="pline w60"></div><div class="pline w40"></div></div>
+          </div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-table-row"><div class="pline w90"></div><div class="pline w60"></div><div class="pline w70"></div><div class="pline w80"></div></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-total"><span>Total</span><span>USD 10,000.00</span></div>
+          <!-- Payment block: Bank ON + Card ON -->
+          <div class="pdf-pay-block">
+            <div class="pdf-pay-label">Pay via</div>
+            <div class="pdf-pay-row">
+              <div class="pdf-pay-icon"></div>
+              <div class="pdf-pay-lines"><div class="pdf-pay-line w55"></div><div class="pdf-pay-line w55" style="width:75%"></div></div>
+            </div>
+            <div class="pdf-pay-row">
+              <div class="pdf-pay-icon"></div>
+              <div class="pdf-pay-lines"><div class="pdf-pay-line w55"></div><div class="pdf-pay-line w55"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 5b — Bank toggled OFF → preview updates
+════════════════════════════════════════════════ -->
+<div class="screen-wrap">
+  <div class="screen-tag">Screen 5b — Same step, Bank toggled OFF <span class="ann">XFLOW-9601: Bank details immediately removed from preview</span></div>
+  <div class="screen">
+    <div class="topbar"><div class="topbar-logo"></div><div class="topbar-spacer"></div><div class="topbar-rate">1 USD = ₹83.42</div><div class="topbar-icon"></div></div>
+    <div class="wizard-screen">
+      <div class="wiz-form">
+        <div class="wiz-body">
+          <div class="step-bar">
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node done">✓</div><div class="step-line done"></div>
+            <div class="step-node current">4</div>
+          </div>
+          <div class="step-names">
+            <div class="step-name done">Client</div><div class="step-name done">Products</div>
+            <div class="step-name done">Invoice Details</div><div class="step-name current">Payment Methods</div>
+          </div>
+          <div class="section-title">Payment</div>
+          <div class="toggle-group">
+            <div class="toggle-row">
+              <div class="t-info">
+                <div class="t-title">Bank Transfer</div>
+                <div class="t-desc">ACH &amp; Fedwire details added automatically to the invoice footer</div>
+              </div>
+              <div class="toggle off"></div><!-- OFF -->
+            </div>
+            <div class="toggle-row">
+              <div class="t-info">
+                <div class="t-title">Card Payments</div>
+                <div class="t-desc">Your buyer pays via credit or debit card</div>
+                <div class="t-fee">Card processing fee is borne by <strong>you</strong> · <a href="#">Manage in Settings →</a></div>
+              </div>
+              <div class="toggle"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="t-info"><div class="t-title">Payment Link</div><div class="t-desc">Send a link for your buyer to pay online</div></div>
+              <div class="toggle off"></div>
+            </div>
+          </div>
+          <div class="pdf-divider" style="margin:16px 0"></div>
+          <div class="section-title">Terms &amp; Conditions</div>
+          <div class="field"><div class="input ph" style="height:60px;align-items:flex-start;padding-top:10px">Add terms and conditions (optional)…</div></div>
+        </div>
+        <div class="wiz-footer">
+          <div class="btn">← Back</div>
+          <div class="btn primary">Send Invoice →</div>
+        </div>
+      </div>
+      <div class="wiz-preview">
+        <div class="sync-note"><strong>Bank toggled OFF</strong> → bank details removed from preview instantly</div>
+        <div class="preview-label">Preview</div>
+        <div class="pdf-doc">
+          <div class="pdf-h"><div class="pdf-htitle">Invoice</div><div class="pdf-logo"></div></div>
+          <div class="pdf-row">
+            <div class="pdf-block"><div class="pdf-block-label">From</div><div class="pline w70"></div><div class="pline w50"></div></div>
+            <div class="pdf-block"><div class="pdf-block-label">To</div><div class="pline w60"></div><div class="pline w40"></div></div>
+          </div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-table-row"><div class="pline w90"></div><div class="pline w60"></div><div class="pline w70"></div><div class="pline w80"></div></div>
+          <div class="pdf-divider"></div>
+          <div class="pdf-total"><span>Total</span><span>USD 10,000.00</span></div>
+          <!-- Payment block: Card only (bank removed) -->
+          <div class="pdf-pay-block">
+            <div class="pdf-pay-label">Pay via</div>
+            <div class="pdf-pay-row">
+              <div class="pdf-pay-icon"></div>
+              <div class="pdf-pay-lines"><div class="pdf-pay-line w55"></div><div class="pdf-pay-line w55"></div></div>
+            </div>
+            <!-- Bank row gone -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

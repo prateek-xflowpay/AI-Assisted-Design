@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iteration D — Accordion Card Stack | Invoice Create</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #E9ECEF; color: #212529; font-size: 14px; }
+
+  /* Shell */
+  .topnav { height: 48px; background: #DEE2E6; border-bottom: 1px solid #CED4DA; display: flex; align-items: center; padding: 0 24px; gap: 12px; }
+  .topnav-logo { width: 72px; height: 20px; background: #ADB5BD; border-radius: 3px; }
+  .topnav-spacer { flex: 1; }
+  .topnav-badge { width: 80px; height: 24px; background: #CED4DA; border-radius: 4px; }
+  .topnav-avatar { width: 28px; height: 28px; background: #ADB5BD; border-radius: 50%; }
+
+  .shell-body { display: flex; height: calc(100vh - 48px); position: relative; }
+  .sidebar { width: 240px; background: #343A40; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; }
+  .sidebar-item { height: 40px; display: flex; align-items: center; padding: 0 20px; color: #ADB5BD; font-size: 14px; gap: 10px; }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: #F8F9FA; }
+  .sidebar-icon { width: 16px; height: 16px; background: currentColor; opacity: 0.5; border-radius: 2px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 20px 4px; font-size: 10px; color: #6C757D; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 8px; }
+
+  /* Main + dimmed background */
+  .main { flex: 1; background: #F8F9FA; opacity: 0.2; }
+
+  /* Full-screen overlay */
+  .overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: #F8F9FA; display: flex; flex-direction: column; z-index: 10;
+  }
+  .overlay-header {
+    height: 52px; background: #fff; border-bottom: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 24px; gap: 16px; flex-shrink: 0;
+  }
+  .overlay-title { font-size: 16px; font-weight: 600; color: #212529; }
+  .overlay-close { margin-left: auto; width: 28px; height: 28px; background: #E9ECEF; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #6C757D; }
+
+  .overlay-body { flex: 1; display: flex; overflow: hidden; }
+
+  /* LEFT: Accordion form panel */
+  .accordion-panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* Annotation bar */
+  .annotation-bar { background: #495057; color: #fff; font-size: 11px; padding: 6px 20px; line-height: 1.5; border-radius: 4px; margin-bottom: 8px; }
+
+  /* Accordion card */
+  .acc-card {
+    background: #fff; border-radius: 6px; border: 1px solid #DEE2E6;
+    box-shadow: rgba(68,78,94,0.07) 0px 1px 3px;
+    overflow: hidden;
+  }
+  .acc-card.active { border-color: #495057; box-shadow: rgba(68,78,94,0.15) 0px 2px 8px; }
+
+  /* Card header row */
+  .acc-header {
+    height: 52px; display: flex; align-items: center; padding: 0 20px; gap: 14px; cursor: pointer;
+  }
+  .acc-num {
+    width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0;
+    border: 1.5px solid #ADB5BD; color: #ADB5BD;
+  }
+  .acc-num.done { background: #6C757D; border-color: #6C757D; color: #fff; font-size: 14px; }
+  .acc-num.active { background: #212529; border-color: #212529; color: #fff; }
+  .acc-title { font-size: 14px; font-weight: 600; color: #ADB5BD; }
+  .acc-title.active { color: #212529; }
+  .acc-title.done { color: #6C757D; }
+  .acc-summary { font-size: 12px; color: #ADB5BD; margin-left: 4px; }
+  .acc-edit { margin-left: auto; font-size: 12px; color: #ADB5BD; text-decoration: underline; cursor: pointer; }
+  .acc-chevron { margin-left: auto; color: #ADB5BD; font-size: 12px; }
+
+  /* Card body (open) */
+  .acc-body { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid #DEE2E6; padding-top: 16px; }
+
+  /* Form fields */
+  .field-row { display: flex; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .field-label { font-size: 11px; font-weight: 500; color: #495057; }
+  .field-label .req { color: #ADB5BD; }
+  .field-input { height: 36px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px; padding: 0 12px; font-size: 13px; color: #495057; display: flex; align-items: center; }
+  .field-input.placeholder { color: #ADB5BD; }
+  .field-input.filled { background: #F8F9FA; }
+  .field-input.select { cursor: pointer; }
+  .field-textarea { min-height: 60px; background: #fff; border: 1px solid #CED4DA; border-radius: 6px; padding: 8px 12px; font-size: 13px; color: #ADB5BD; resize: none; font-family: inherit; }
+
+  /* Inline continue button inside card */
+  .acc-continue {
+    height: 36px; background: #495057; color: #fff; border: none; border-radius: 6px;
+    padding: 0 20px; font-size: 13px; cursor: pointer; font-family: inherit; align-self: flex-start; margin-top: 4px;
+  }
+
+  /* Items mini table */
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th { font-size: 11px; font-weight: 500; color: #6C757D; text-align: left; padding: 5px 6px; border-bottom: 1px solid #DEE2E6; }
+  .items-table td { font-size: 12px; padding: 7px 6px; border-bottom: 1px solid #F1F3F5; color: #495057; vertical-align: middle; }
+  .items-table td input { height: 30px; border: 1px solid #DEE2E6; border-radius: 4px; padding: 0 8px; width: 100%; font-size: 12px; background: #F8F9FA; color: #495057; font-family: inherit; }
+  .items-table td input.empty { color: #ADB5BD; background: #fff; }
+  .add-item-btn { height: 30px; border: 1px dashed #ADB5BD; border-radius: 4px; background: transparent; color: #6C757D; font-size: 12px; cursor: pointer; width: 100%; margin-top: 6px; font-family: inherit; }
+  .items-total { display: flex; justify-content: flex-end; gap: 12px; font-size: 12px; padding-right: 2px; margin-top: 8px; }
+  .items-total .label { color: #6C757D; }
+  .items-total .val { font-weight: 600; color: #212529; }
+
+  /* Toggle rows */
+  .toggle-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .toggle-track { width: 34px; height: 18px; background: #ADB5BD; border-radius: 9px; flex-shrink: 0; position: relative; }
+  .toggle-track.on { background: #6C757D; }
+  .toggle-thumb { position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 2px; left: 2px; }
+  .toggle-track.on .toggle-thumb { left: 18px; }
+  .toggle-label { font-size: 12px; color: #495057; }
+
+  /* Compliance label */
+  .compliance-pill { font-size: 10px; font-weight: 600; background: #E9ECEF; color: #6C757D; border-radius: 3px; padding: 2px 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Preview panel (right) */
+  .preview-panel {
+    width: 420px; background: #E9ECEF; border-left: 1px solid #DEE2E6;
+    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  }
+  .preview-header {
+    height: 44px; background: #DEE2E6; border-bottom: 1px solid #CED4DA;
+    display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  }
+  .preview-header-title { font-size: 12px; font-weight: 600; color: #495057; }
+  .preview-action-btn { height: 28px; border: 1px solid #ADB5BD; border-radius: 4px; background: #fff; color: #6C757D; font-size: 11px; padding: 0 10px; cursor: pointer; margin-left: auto; }
+  .preview-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; justify-content: center; }
+  .invoice-doc {
+    width: 100%; background: #fff; border-radius: 4px;
+    box-shadow: rgba(68,78,94,0.15) 0px 2px 8px;
+    padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 480px;
+  }
+  .doc-line { height: 10px; background: #E9ECEF; border-radius: 2px; }
+  .doc-divider { height: 1px; background: #E9ECEF; }
+  .doc-meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .doc-meta-block { display: flex; flex-direction: column; gap: 4px; }
+  .doc-meta-lbl { font-size: 10px; color: #ADB5BD; text-transform: uppercase; letter-spacing: 0.05em; }
+  .doc-items-hatch { height: 100px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px); border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #ADB5BD; }
+  .doc-total-row { display: flex; justify-content: flex-end; gap: 24px; font-size: 12px; color: #6C757D; }
+  .doc-total-row.grand { font-weight: 600; color: #212529; font-size: 13px; }
+  .doc-footer-hatch { height: 48px; background: repeating-linear-gradient(45deg, #F8F9FA, #F8F9FA 4px, #E9ECEF 4px, #E9ECEF 8px); border-radius: 4px; border: 1px solid #DEE2E6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #ADB5BD; }
+
+  /* Footer */
+  .overlay-footer {
+    height: 60px; background: #fff; border-top: 1px solid #DEE2E6;
+    display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0;
+  }
+  .btn-primary { height: 36px; background: #495057; color: #fff; border: none; border-radius: 6px; padding: 0 20px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-ghost { height: 36px; background: transparent; color: #ADB5BD; border: none; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .footer-note { font-size: 12px; color: #ADB5BD; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="topnav-logo"></div>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-badge"></div>
+  <div class="topnav-avatar"></div>
+</div>
+
+<div class="shell-body">
+
+  <div class="sidebar">
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Home</div>
+    <div class="sidebar-section">Receive Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Receivables</div>
+    <div class="sidebar-item active"><div class="sidebar-icon"></div> Invoicing</div>
+    <div class="sidebar-section">Payments</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Payouts</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Balances</div>
+    <div class="sidebar-section">Account</div>
+    <div class="sidebar-item"><div class="sidebar-icon"></div> Partners</div>
+  </div>
+
+  <!-- Main behind (dimmed) -->
+  <div class="main"></div>
+
+  <!-- OVERLAY -->
+  <div class="overlay">
+
+    <div class="overlay-header">
+      <div class="overlay-title">Create Invoice</div>
+      <div style="font-size:13px; color:#ADB5BD;">Complete each section to unlock the next</div>
+      <div class="overlay-close">×</div>
+    </div>
+
+    <div class="overlay-body">
+
+      <!-- ── LEFT: Accordion form ── -->
+      <div class="accordion-panel">
+
+        <div class="annotation-bar">
+          <strong>Model D — Accordion card stack:</strong> All steps shown as stacked cards. One opens at a time; clicking "Continue" validates and auto-advances to the next. Completed cards collapse to a summary chip. No Back/Next bar — progression is inline within each card.
+        </div>
+
+        <!-- Card 1: Client — DONE, collapsed -->
+        <div class="acc-card">
+          <div class="acc-header">
+            <div class="acc-num done">✓</div>
+            <div class="acc-title done">Client</div>
+            <div class="acc-summary">Acme Corp · USD</div>
+            <div class="acc-edit">Edit</div>
+          </div>
+        </div>
+
+        <!-- Card 2: Items — ACTIVE, open -->
+        <div class="acc-card active">
+          <div class="acc-header">
+            <div class="acc-num active">2</div>
+            <div class="acc-title active">Invoice Items</div>
+          </div>
+          <div class="acc-body">
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+              <div class="field" style="max-width:160px;">
+                <div class="field-label">Currency <span class="req">*</span></div>
+                <div class="field-input select filled">USD ▾</div>
+              </div>
+            </div>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th style="width:38%;">Item</th>
+                  <th style="width:10%;">Qty</th>
+                  <th style="width:22%;">Unit Price</th>
+                  <th style="width:20%;">Total</th>
+                  <th style="width:10%;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input value="Software Development" readonly></td>
+                  <td><input value="1" style="text-align:right;" readonly></td>
+                  <td><input value="5,000.00" style="text-align:right;" readonly></td>
+                  <td style="font-size:12px; font-weight:600; text-align:right;">5,000.00</td>
+                  <td style="text-align:right; color:#ADB5BD;">×</td>
+                </tr>
+                <tr>
+                  <td><input class="empty" placeholder="Select or add item…" readonly></td>
+                  <td><input class="empty" placeholder="1" style="text-align:right;" readonly></td>
+                  <td><input class="empty" placeholder="0.00" style="text-align:right;" readonly></td>
+                  <td style="text-align:right; color:#ADB5BD;">—</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="add-item-btn">+ Add item</button>
+            <div class="items-total">
+              <span class="label">Total</span>
+              <span class="val">USD 5,000.00</span>
+            </div>
+            <!-- Inline continue -->
+            <button class="acc-continue">Continue →</button>
+          </div>
+        </div>
+
+        <!-- Card 3: Invoice Details — LOCKED, collapsed -->
+        <div class="acc-card" style="opacity: 0.5; pointer-events: none;">
+          <div class="acc-header">
+            <div class="acc-num">3</div>
+            <div class="acc-title">Invoice Details</div>
+            <div style="margin-left:auto; font-size:11px; color:#ADB5BD;">Complete step 2 to unlock</div>
+          </div>
+          <!-- Collapsed preview of fields (greyed) -->
+          <div style="padding: 0 20px 14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; border-top:1px solid #F1F3F5; padding-top:12px; opacity:0.5;">
+            <div class="field"><div class="field-label">Invoice Number</div><div class="field-input placeholder" style="font-size:12px;">Auto-generated</div></div>
+            <div class="field"><div class="field-label">Invoice Date</div><div class="field-input placeholder" style="font-size:12px;">DD/MM/YY</div></div>
+            <div class="field"><div class="field-label">Due Date</div><div class="field-input placeholder" style="font-size:12px;">DD/MM/YY</div></div>
+            <div class="field"><div class="field-label">Transaction Type <span class="compliance-pill">Compliance</span></div><div class="field-input placeholder" style="font-size:12px;">Select ▾</div></div>
+            <div class="field" style="grid-column:span 2;"><div class="field-label">Purpose Code <span class="compliance-pill">Compliance</span></div><div class="field-input placeholder" style="font-size:12px;">Select ▾</div></div>
+          </div>
+        </div>
+
+        <!-- Card 4: Payment — LOCKED, collapsed -->
+        <div class="acc-card" style="opacity: 0.4; pointer-events: none;">
+          <div class="acc-header">
+            <div class="acc-num">4</div>
+            <div class="acc-title">Payment Options</div>
+            <div style="margin-left:auto; font-size:11px; color:#ADB5BD;">Complete step 3 to unlock</div>
+          </div>
+        </div>
+
+        <!-- Spacer -->
+        <div style="height: 8px;"></div>
+
+      </div><!-- /accordion-panel -->
+
+      <!-- ── RIGHT: Preview Panel ── -->
+      <div class="preview-panel">
+        <div class="preview-header">
+          <div class="preview-header-title">Invoice Preview</div>
+          <button class="preview-action-btn">Change Template</button>
+        </div>
+        <div class="preview-body">
+          <div class="invoice-doc">
+            <!-- Doc header -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div style="width:70px; height:24px; background:#E9ECEF; border-radius:3px; display:flex;align-items:center;justify-content:center; font-size:10px; color:#ADB5BD;">LOGO</div>
+              <div style="text-align:right;">
+                <div style="font-size:16px; font-weight:700; color:#ADB5BD; letter-spacing:0.04em;">INVOICE</div>
+                <div style="font-size:10px; color:#ADB5BD; margin-top:2px;">INV-ACM-240624-00001</div>
+              </div>
+            </div>
+            <div class="doc-divider"></div>
+            <div class="doc-meta-row">
+              <div class="doc-meta-block">
+                <div class="doc-meta-lbl">From</div>
+                <div class="doc-line" style="width:80%;"></div>
+                <div class="doc-line" style="width:55%; margin-top:3px;"></div>
+              </div>
+              <div class="doc-meta-block" style="text-align:right; align-items:flex-end;">
+                <div class="doc-meta-lbl">Bill To</div>
+                <div style="font-size:12px; font-weight:500; color:#495057;">Acme Corp</div>
+                <div class="doc-line" style="width:60%; margin-top:3px;"></div>
+              </div>
+            </div>
+            <div class="doc-meta-row" style="grid-template-columns: repeat(3, 1fr);">
+              <div class="doc-meta-block"><div class="doc-meta-lbl">Invoice Date</div><div class="doc-line" style="width:60%;"></div></div>
+              <div class="doc-meta-block"><div class="doc-meta-lbl">Due Date</div><div class="doc-line" style="width:60%;"></div></div>
+              <div class="doc-meta-block"><div class="doc-meta-lbl">Amount Due</div><div class="doc-line" style="width:80%; height:14px; background:#DEE2E6;"></div></div>
+            </div>
+            <div class="doc-items-hatch">Line items will appear here</div>
+            <div class="doc-total-row"><span>Subtotal</span><span>USD 5,000.00</span></div>
+            <div class="doc-total-row grand"><span>Total Due</span><span>USD 5,000.00</span></div>
+            <div class="doc-footer-hatch">Payment details + T&amp;C footer</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /overlay-body -->
+
+    <!-- Footer -->
+    <div class="overlay-footer">
+      <button class="btn-ghost">Save as Draft</button>
+      <div class="footer-note" style="margin-left:auto;">Complete all 4 sections to activate</div>
+      <button class="btn-primary" style="opacity:0.4; cursor:not-allowed;">Activate Invoice →</button>
+    </div>
+
+  </div><!-- /overlay -->
+
+</div><!-- /shell-body -->
+
+</body>
+</html>
