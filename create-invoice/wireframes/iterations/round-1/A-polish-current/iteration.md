@@ -1,3 +1,5 @@
+---
+---
 # Round 1 · Model A — Polish Current Structure
 
 **Date:** 2026-06-25  

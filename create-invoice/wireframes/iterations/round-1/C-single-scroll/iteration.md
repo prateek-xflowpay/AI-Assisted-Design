@@ -1,3 +1,5 @@
+---
+---
 # Round 1 · Model C — Single-Scroll Canvas
 
 **Date:** 2026-06-25  

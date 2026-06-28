@@ -1,3 +1,5 @@
+---
+---
 # 01 Smart Single-Screen Form — round 2
 updated: 2026-06-24 · Prateek
 status: pending-review

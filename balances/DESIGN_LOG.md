@@ -1,3 +1,5 @@
+---
+---
 # Balances — Design Log
 
 Feature scoped to currency-card layout on the `/balances` page. Standalone lo-fi exploration (not the full gated workflow).

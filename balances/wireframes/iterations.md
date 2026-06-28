@@ -1,3 +1,5 @@
+---
+---
 # Wireframe Iterations — Balances (currency card de-verticalization)
 
 Goal: move the currency selector out of the tall vertical left column so the balance content gains horizontal width. Standalone run, intent = **2–3 focused layouts** (no broad 3–5 divergence).

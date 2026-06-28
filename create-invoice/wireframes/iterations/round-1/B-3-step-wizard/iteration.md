@@ -1,3 +1,5 @@
+---
+---
 # Round 1 · Model B — Lighter 3-Step Wizard
 
 **Date:** 2026-06-25  

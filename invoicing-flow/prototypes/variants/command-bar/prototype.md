@@ -1,3 +1,5 @@
+---
+---
 # Prototype — Command Bar (Model B)
 updated: 2026-06-24 · Prateek
 status: built — pending stakeholder review

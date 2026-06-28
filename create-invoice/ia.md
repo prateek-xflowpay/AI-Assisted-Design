@@ -1,3 +1,5 @@
+---
+---
 # Information Architecture — Create Invoice Flow
 Date: 2026-06-25
 Persona(s): DU — Direct User (Exports)
