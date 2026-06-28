@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # 02 Horizontal currency rail — round 1
 updated: 2026-06-25 · Prateek
 status: candidate (round 1)

@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # Selected for Validate Design — Invoicing Flow (Round 2)
 
 Converged 2026-06-24 · Prateek. Driver: **too many steps / drop-off**.

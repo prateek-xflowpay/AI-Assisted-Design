@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # 03 Duplicate-First / Template Gallery — round 2
 updated: 2026-06-24 · Prateek
 status: pending-review

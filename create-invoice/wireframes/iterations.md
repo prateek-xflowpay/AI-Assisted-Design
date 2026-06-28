@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # Wireframe Iterations Ledger — Create Invoice Flow
 
 Each row is one lo-fi iteration. Status: **selected** → carried to Validate Design · **rejected** → not carried · **parked** → not carried now, may revive.

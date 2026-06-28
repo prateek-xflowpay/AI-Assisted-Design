@@ -1,6 +1,3 @@
----
-render_with_liquid: false
----
 # UX Copy — Invoicing Flow (Re-design)
 Date: 2026-06-24
 Persona(s): Direct User (DU)

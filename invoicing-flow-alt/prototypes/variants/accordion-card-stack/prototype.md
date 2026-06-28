@@ -1,14 +1,3 @@
----
-render_with_liquid: false
-# Accordion Card Stack Prototype
-updated: 2026-06-24 · Prateek
-status: built — pending stakeholder review
-lineage: wireframes/iterations/round-1/04-accordion-steps/
-source-flow: wireframes/iterations/round-1/04-accordion-steps/flow.mermaid
-baseline: dashboard-context (no page-snapshots present — gap noted)
-hypothesis: Showing all steps as locked cards upfront reduces "how much longer?" anxiety while inline Continue validation catches errors earlier than a full-form submit failure.
-trade-off: Locked cards may frustrate users who try to click ahead; auto-scroll to the newly opened card on Continue needs careful implementation to feel natural at all viewport heights.
----
 
 ## Fidelity check
 
