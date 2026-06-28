@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # 03 Segmented + more — round 1
 updated: 2026-06-25 · Prateek

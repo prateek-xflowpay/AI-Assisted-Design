@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # Research — Create Invoice Flow
 Date: 2026-06-25

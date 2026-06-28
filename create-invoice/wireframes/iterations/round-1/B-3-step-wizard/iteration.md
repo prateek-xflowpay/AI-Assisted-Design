@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # Round 1 · Model B — Lighter 3-Step Wizard
 

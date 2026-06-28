@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 # Accordion Card Stack Prototype
 updated: 2026-06-24 · Prateek
 status: built — pending stakeholder review

@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # Round 1 · Model C — Single-Scroll Canvas
 

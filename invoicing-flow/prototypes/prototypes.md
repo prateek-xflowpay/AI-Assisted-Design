@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # Prototypes — Invoicing Flow
 Date: 2026-06-24 · Persona: direct_user (merchant / finance admin)

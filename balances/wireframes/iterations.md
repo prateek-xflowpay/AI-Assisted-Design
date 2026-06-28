@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # Wireframe Iterations — Balances (currency card de-verticalization)
 

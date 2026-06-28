@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 ---
 # 04 Direct-on-Document Editing — round 2
 updated: 2026-06-24 · Prateek

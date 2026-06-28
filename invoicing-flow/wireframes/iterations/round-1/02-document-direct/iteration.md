@@ -1,4 +1,5 @@
 ---
+render_with_liquid: false
 # 02 Document-Direct — round 1
 updated: 2026-06-24 · Prateek
 status: pending-review
